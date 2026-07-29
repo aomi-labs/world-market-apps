@@ -1,0 +1,13 @@
+{
+  "name": "world-market-apps",
+  "source_repo": "aomi-labs/world-market-apps",
+  "publish_branch": "publish",
+  "app_path_prefix": "apps",
+  "app_path_convention": "apps/{installation_id}/{repo_key}/{app_slug}",
+  "release_tag_convention": "apps-{installation_id}-{repo_key}-{app_slug}-{short_commit}",
+  "deployment_manifest": ".aomi/deployment.json",
+  "visibility": "private",
+  "review_policy": "partner-review",
+  "required_sdk_version": "3.0.4",
+  "default_target": "x86_64-unknown-linux-gnu"
+}

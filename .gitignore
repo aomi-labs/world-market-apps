@@ -1,0 +1,6 @@
+.aomi-ci-target/
+dist/
+target/
+examples/*/Cargo.lock
+__pycache__/
+*.pyc
