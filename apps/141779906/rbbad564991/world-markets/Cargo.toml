@@ -1,0 +1,17 @@
+[package]
+name = "world-markets"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+alloy-primitives = "=0.8.25"
+alloy-sol-types = "=0.8.25"
+aomi-sdk = "=3.0.4"
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+schemars = "1.0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
