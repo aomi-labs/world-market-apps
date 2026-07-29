@@ -1,4 +1,5 @@
 name: Build Candidate App Release
+# Kept on the default branch so GitHub registers candidate-branch runs.
 
 on:
   push:
