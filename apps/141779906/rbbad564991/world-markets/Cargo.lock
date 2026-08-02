@@ -133,15 +133,18 @@ dependencies = [
 
 [[package]]
 name = "aomi-sdk"
-version = "3.0.4"
+version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6fc34605b1fc9c1f41562c2da0336d3e42d1466f2dc74ba4b959ecfdeff52f59"
+checksum = "452cbb170b5115b2ba8e01810b7e6065400594bf3e5b75077ce28598c81523af"
 dependencies = [
+ "bs58",
  "eyre",
  "libloading",
  "schemars 1.2.2",
  "serde",
  "serde_json",
+ "sha2",
+ "tiny-keccak",
  "tracing",
 ]
 
