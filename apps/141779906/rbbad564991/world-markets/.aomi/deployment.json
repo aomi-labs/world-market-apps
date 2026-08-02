@@ -1,0 +1,80 @@
+{
+  "id": "dep_141779906_rbbad564991_8570845defeb",
+  "status": "",
+  "sdk_version": "3.1.0",
+  "deployed_at": 1785705176,
+  "source": {
+    "installation_id": 141779906,
+    "repository_id": 1316599490,
+    "repository_link": "ceciliaz030/world-markets-agent",
+    "owner_repo_name": "ceciliaz030/world-markets-agent",
+    "ref": "8570845defebbb08f49d614e25a97ff9b6fb21f0",
+    "commit_hash": "8570845defebbb08f49d614e25a97ff9b6fb21f0",
+    "aomi_toml_paths": [
+      "aomi.toml"
+    ]
+  },
+  "platform": {
+    "platform": "world-market-apps",
+    "repository": "aomi-labs/world-market-apps",
+    "deploy_branch": "publish",
+    "source_branch": "ceciliaz030/world-markets-agent/141779906/8570845defeb",
+    "commit_hash": null,
+    "pr_number": null,
+    "pr_url": null,
+    "ci_status": null,
+    "ci_url": null,
+    "apps": [
+      {
+        "name": "world-markets",
+        "path": "apps/141779906/rbbad564991/world-markets",
+        "aomi_toml_path": "aomi.toml",
+        "release_tag": "apps-141779906-rbbad564991-world-markets-8570845defeb",
+        "sdk_version": "3.1.0",
+        "target": "x86_64-unknown-linux-gnu",
+        "files": [
+          {
+            "path": ".gitignore",
+            "sha256": "sha256:b2d83a6901911c5c0e41532223c955311d86c6935dc956ca22172f7ba15d8395",
+            "bytes": 17
+          },
+          {
+            "path": "Cargo.lock",
+            "sha256": "sha256:aa210c1e3b0b6854e5f407dd5776a5e288630abc286e150c14aaf92c36ed3737",
+            "bytes": 80408
+          },
+          {
+            "path": "Cargo.toml",
+            "sha256": "sha256:3f4c7ae0345899f147e2d18ae79da83289486e25c31ff7ccb471a67b2b6adcf9",
+            "bytes": 409
+          },
+          {
+            "path": "README.md",
+            "sha256": "sha256:0c19c53032b12953280bbc45ebd3be8a2148eb1036f757211054514c4b821d50",
+            "bytes": 569
+          },
+          {
+            "path": "aomi.toml",
+            "sha256": "sha256:42e29ca0812fda65cc1ff397fff338f577390a9c9a6f6661a00dfca52cd3926e",
+            "bytes": 111
+          },
+          {
+            "path": "src/client.rs",
+            "sha256": "sha256:4b2bb3f062c71621acfebb33025765c6c5510de5c3b26f1496469762f26f70e0",
+            "bytes": 24808
+          },
+          {
+            "path": "src/lib.rs",
+            "sha256": "sha256:513bf69c509fef2650dac57bde04361b90d14d60e6b4457106ad50633faa89a1",
+            "bytes": 2219
+          },
+          {
+            "path": "src/tool.rs",
+            "sha256": "sha256:576fba7ac11a73d850fb8398498f772cfa94b6ecab8d2f868b40ba6b805198da",
+            "bytes": 8271
+          }
+        ]
+      }
+    ]
+  }
+}
