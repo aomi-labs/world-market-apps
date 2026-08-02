@@ -15,7 +15,7 @@ class PlatformConfigTests(unittest.TestCase):
     def write_config(self, **overrides):
         config = {
             "name": "world-market-apps",
-            "required_sdk_version": "3.0.4",
+            "required_sdk_version": "3.1.0",
             **overrides,
         }
         (bc.REPO_ROOT / "platform.json").write_text(json.dumps(config))
@@ -23,7 +23,7 @@ class PlatformConfigTests(unittest.TestCase):
     def test_reads_platform_contract(self):
         self.write_config()
         self.assertEqual(bc.platform_name(), "world-market-apps")
-        self.assertEqual(bc.required_sdk_version(), "3.0.4")
+        self.assertEqual(bc.required_sdk_version(), "3.1.0")
 
     def test_rejects_missing_platform_name(self):
         self.write_config(name="")
