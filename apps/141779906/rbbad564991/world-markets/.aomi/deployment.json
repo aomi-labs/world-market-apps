@@ -1,0 +1,100 @@
+{
+  "id": "dep_141779906_rbbad564991_e7acad277ea5",
+  "status": "",
+  "sdk_version": "3.1.0",
+  "deployed_at": 1785718440,
+  "source": {
+    "installation_id": 141779906,
+    "repository_id": 1316599490,
+    "repository_link": "ceciliaz030/world-markets-agent",
+    "owner_repo_name": "ceciliaz030/world-markets-agent",
+    "ref": "e7acad277ea51402fd9813f9b43c43b66805d7da",
+    "commit_hash": "e7acad277ea51402fd9813f9b43c43b66805d7da",
+    "aomi_toml_paths": [
+      "aomi.toml"
+    ]
+  },
+  "platform": {
+    "platform": "world-market-apps",
+    "repository": "aomi-labs/world-market-apps",
+    "deploy_branch": "publish",
+    "source_branch": "ceciliaz030/world-markets-agent/141779906/e7acad277ea5",
+    "commit_hash": null,
+    "pr_number": null,
+    "pr_url": null,
+    "ci_status": null,
+    "ci_url": null,
+    "apps": [
+      {
+        "name": "world-markets",
+        "path": "apps/141779906/rbbad564991/world-markets",
+        "aomi_toml_path": "aomi.toml",
+        "release_tag": "apps-141779906-rbbad564991-world-markets-e7acad277ea5",
+        "sdk_version": "3.1.0",
+        "target": "x86_64-unknown-linux-gnu",
+        "files": [
+          {
+            "path": ".gitignore",
+            "sha256": "sha256:b2d83a6901911c5c0e41532223c955311d86c6935dc956ca22172f7ba15d8395",
+            "bytes": 17
+          },
+          {
+            "path": "Cargo.lock",
+            "sha256": "sha256:d387e8c946384583d7ad29f33a964670b9ce7650209a1e11356592be9aa140e2",
+            "bytes": 80408
+          },
+          {
+            "path": "Cargo.toml",
+            "sha256": "sha256:7795385465af37f3772de06ef6461b6755b755cef0599f2eab911fb228c1fb5b",
+            "bytes": 409
+          },
+          {
+            "path": "README.md",
+            "sha256": "sha256:0ad18174288f8ba11e0234c5cb846d04473d67ff157043f8444fead11934a215",
+            "bytes": 722
+          },
+          {
+            "path": "aomi.toml",
+            "sha256": "sha256:42e29ca0812fda65cc1ff397fff338f577390a9c9a6f6661a00dfca52cd3926e",
+            "bytes": 111
+          },
+          {
+            "path": "src/client.rs",
+            "sha256": "sha256:4b2bb3f062c71621acfebb33025765c6c5510de5c3b26f1496469762f26f70e0",
+            "bytes": 24808
+          },
+          {
+            "path": "src/lib.rs",
+            "sha256": "sha256:1015c2160464f4e19ae3973a8fd4751078f67122db96d79259371f7c8c992ef4",
+            "bytes": 1597
+          },
+          {
+            "path": "src/skill/action-rules.md",
+            "sha256": "sha256:52170545ed440b24c3f724f727f45ecca41fe6a55e20460447c5619efb42b774",
+            "bytes": 1092
+          },
+          {
+            "path": "src/skill/instructions.md",
+            "sha256": "sha256:1a3d90131f8b60733d8c08f0c4fb61b9c3e21383de8436dbecfbe62518911199",
+            "bytes": 1010
+          },
+          {
+            "path": "src/skill/safety.md",
+            "sha256": "sha256:f279d94ce06a30b6b64c6d58160166058115ad935171fb62f4a0c127b2015c8f",
+            "bytes": 990
+          },
+          {
+            "path": "src/skill/workflows.md",
+            "sha256": "sha256:b8d334dee5ddfc1dace17b2bc8887770876e45013dbdd72b1b1af5f74285e300",
+            "bytes": 1447
+          },
+          {
+            "path": "src/tool.rs",
+            "sha256": "sha256:576fba7ac11a73d850fb8398498f772cfa94b6ecab8d2f868b40ba6b805198da",
+            "bytes": 8271
+          }
+        ]
+      }
+    ]
+  }
+}
