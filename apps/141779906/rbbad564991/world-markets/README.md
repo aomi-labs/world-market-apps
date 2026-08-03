@@ -9,7 +9,9 @@ The app reads the World exchange contract directly and exposes four typed tools:
 - `get_world_market`
 - `preview_world_trade`
 
-Version 0.1 is intentionally read-only. Trade previews are never policy
+Version 0.2 is intentionally read-only and ships an app-scoped World Markets
+skill. Its instructions are embedded in this app release and cannot be
+discovered or activated by another Aomi app. Trade previews are never policy
 approval and cannot sign, submit, or execute transactions.
 
 ## Validate
