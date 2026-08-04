@@ -28,8 +28,13 @@ sol! {
         external view returns (uint256 position);
     function readPerpAggPosition(uint64 userId, uint32 tokenId)
         external view returns (uint256 position, int256 owedBase);
+    function bulkTraders_5523718714(uint64 userId) external view returns (address[] traders);
     function bulkReadTokenConfigs_3423260018() external view returns (uint256[] configs);
     function bulkReadMaxUserId_5445644137() external view returns (uint64 maxUserId);
+    function searchBuyOrders(uint64 userId, uint32 maxDepth, uint32 maxOrders, uint64 restartPosition)
+        external view returns (uint256[] orders);
+    function searchSellOrders(uint64 userId, uint32 maxDepth, uint32 maxOrders, uint64 restartPosition)
+        external view returns (uint256[] orders);
 }
 
 #[derive(Clone)]
@@ -82,6 +87,24 @@ pub(crate) struct Account {
 }
 
 #[derive(Debug, Clone, Serialize)]
+pub(crate) struct AccountAccess {
+    pub(crate) account_id: u64,
+    pub(crate) owner: String,
+    pub(crate) actor: String,
+    pub(crate) authorization: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct AgentPermission {
+    pub(crate) account_id: u64,
+    pub(crate) owner: String,
+    pub(crate) actor: String,
+    pub(crate) authorized: bool,
+    pub(crate) authorization: String,
+    pub(crate) permitted_traders: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub(crate) struct LendingPosition {
     pub(crate) token_id: u32,
     pub(crate) symbol: String,
@@ -119,6 +142,28 @@ pub(crate) struct Market {
     pub(crate) pay_token_id: Option<u32>,
     pub(crate) mark_price_raw: u64,
     pub(crate) mark_price: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct OpenOrder {
+    pub(crate) product: String,
+    pub(crate) side: String,
+    pub(crate) order_id: u64,
+    pub(crate) order_type: String,
+    pub(crate) quantity_raw: u64,
+    pub(crate) quantity: String,
+    pub(crate) price_raw: u64,
+    pub(crate) price: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct OpenOrders {
+    pub(crate) account_id: u64,
+    pub(crate) order_book: String,
+    pub(crate) product: String,
+    pub(crate) orders: Vec<OpenOrder>,
+    pub(crate) buy_cursor: String,
+    pub(crate) sell_cursor: String,
 }
 
 #[derive(Deserialize)]
@@ -195,6 +240,12 @@ impl WorldClient {
 
     pub(crate) fn owner_for(&self, account_id: u64) -> Result<Address, String> {
         Ok(self.call(&getUserAddressCall { userId: account_id })?._0)
+    }
+
+    pub(crate) fn traders_for(&self, account_id: u64) -> Result<Vec<Address>, String> {
+        Ok(self
+            .call(&bulkTraders_5523718714Call { userId: account_id })?
+            .traders)
     }
 
     pub(crate) fn account(&self, account_id: u64, assets: &[Asset]) -> Result<Account, String> {
@@ -291,39 +342,102 @@ impl WorldClient {
     pub(crate) fn resolve_account(
         &self,
         account_id: Option<u64>,
-        wallet: Option<&str>,
-    ) -> Result<u64, String> {
-        let wallet = wallet
+        owner_wallet: Option<&str>,
+        actor: Option<&str>,
+    ) -> Result<AccountAccess, String> {
+        let owner_wallet = owner_wallet
             .map(Address::from_str)
             .transpose()
             .map_err(|e| format!("[world-markets] invalid wallet address: {e}"))?;
+        let actor = actor
+            .map(Address::from_str)
+            .transpose()
+            .map_err(|e| format!("[world-markets] invalid actor address: {e}"))?;
 
-        match (account_id, wallet) {
-            (Some(id), Some(address)) => {
-                let owner = self.owner_for(id)?;
-                if owner != address {
-                    return Err(format!(
-                        "[world-markets] account {id} belongs to {owner:#x}, not {address:#x}"
-                    ));
-                }
-                Ok(id)
+        let id = match (account_id, owner_wallet, actor) {
+            (Some(id), _, _) => id,
+            (None, Some(owner), _) => self.account_id_for(owner)?,
+            (None, None, Some(actor)) => self.account_id_for(actor)?,
+            (None, None, None) => {
+                return Err(
+                    "[world-markets] no World account context is available; provide account_id or bind a handover account reference"
+                        .to_string(),
+                );
             }
-            (Some(id), None) => Ok(id),
-            (None, Some(address)) => {
-                let id = self.account_id_for(address)?;
-                if id == 0 {
-                    Err(format!(
-                        "[world-markets] wallet {address:#x} has no registered World account"
-                    ))
-                } else {
-                    Ok(id)
-                }
-            }
-            (None, None) => Err(
-                "[world-markets] no World account context is available; provide account_id or connect an EVM wallet"
-                    .to_string(),
-            ),
+        };
+        if id == 0 {
+            return Err(
+                "[world-markets] the supplied wallet has no registered World account".to_string(),
+            );
         }
+        let owner = self.owner_for(id)?;
+        if owner.is_zero() {
+            return Err(format!("[world-markets] World account {id} does not exist"));
+        }
+        if let Some(expected_owner) = owner_wallet
+            && owner != expected_owner
+        {
+            return Err(format!(
+                "[world-markets] account {id} owner is {owner:#x}, not {expected_owner:#x}"
+            ));
+        }
+
+        let actor = actor.or(owner_wallet).ok_or_else(|| {
+            "[world-markets] no acting wallet is bound; connect the owner wallet or use an active handover"
+                .to_string()
+        })?;
+        let (authorized, authorization) = if actor == owner {
+            (true, "owner")
+        } else {
+            let traders = self.traders_for(id)?;
+            (traders.contains(&actor), "delegated_trader")
+        };
+        if !authorized {
+            return Err(format!(
+                "[world-markets] actor {actor:#x} is neither the owner {owner:#x} nor a permitted trader for account {id}; the grant may be missing or revoked"
+            ));
+        }
+
+        Ok(AccountAccess {
+            account_id: id,
+            owner: format!("{owner:#x}"),
+            actor: format!("{actor:#x}"),
+            authorization: authorization.to_string(),
+        })
+    }
+
+    pub(crate) fn agent_permission(
+        &self,
+        account_id: u64,
+        actor: &str,
+    ) -> Result<AgentPermission, String> {
+        let actor = Address::from_str(actor)
+            .map_err(|e| format!("[world-markets] invalid actor address: {e}"))?;
+        let owner = self.owner_for(account_id)?;
+        if owner.is_zero() {
+            return Err(format!(
+                "[world-markets] World account {account_id} does not exist"
+            ));
+        }
+        let traders = self.traders_for(account_id)?;
+        let authorization = if actor == owner {
+            "owner"
+        } else if traders.contains(&actor) {
+            "delegated_trader"
+        } else {
+            "none"
+        };
+        Ok(AgentPermission {
+            account_id,
+            owner: format!("{owner:#x}"),
+            actor: format!("{actor:#x}"),
+            authorized: authorization != "none",
+            authorization: authorization.to_string(),
+            permitted_traders: traders
+                .into_iter()
+                .map(|address| format!("{address:#x}"))
+                .collect(),
+        })
     }
 
     pub(crate) fn market(
@@ -393,13 +507,67 @@ impl WorldClient {
         })
     }
 
+    pub(crate) fn open_orders(
+        &self,
+        market: &Market,
+        account_id: u64,
+    ) -> Result<OpenOrders, String> {
+        const MAX_DEPTH: u32 = 1_000;
+        const MAX_ORDERS: u32 = 200;
+        let book = Address::from_str(&market.book)
+            .map_err(|e| format!("[world-markets] invalid order-book address: {e}"))?;
+        let buys = self.call_at(
+            book,
+            &searchBuyOrdersCall {
+                userId: account_id,
+                maxDepth: MAX_DEPTH,
+                maxOrders: MAX_ORDERS,
+                restartPosition: 0,
+            },
+        )?;
+        let sells = self.call_at(
+            book,
+            &searchSellOrdersCall {
+                userId: account_id,
+                maxDepth: MAX_DEPTH,
+                maxOrders: MAX_ORDERS,
+                restartPosition: 0,
+            },
+        )?;
+        let (mut orders, buy_cursor) = decode_open_orders(
+            &buys.orders,
+            &market.product,
+            "buy",
+            market.base_token.position_decimals,
+        );
+        let (sell_orders, sell_cursor) = decode_open_orders(
+            &sells.orders,
+            &market.product,
+            "sell",
+            market.base_token.position_decimals,
+        );
+        orders.extend(sell_orders);
+        Ok(OpenOrders {
+            account_id,
+            order_book: market.book.clone(),
+            product: market.product.clone(),
+            orders,
+            buy_cursor,
+            sell_cursor,
+        })
+    }
+
     fn call<C: SolCall>(&self, call: &C) -> Result<C::Return, String> {
+        self.call_at(self.exchange, call)
+    }
+
+    fn call_at<C: SolCall>(&self, target: Address, call: &C) -> Result<C::Return, String> {
         let body = json!({
             "jsonrpc": "2.0",
             "id": 1,
             "method": "eth_call",
             "params": [{
-                "to": format!("{:#x}", self.exchange),
+                "to": format!("{target:#x}"),
                 "data": format!("0x{}", hex::encode(call.abi_encode())),
             }, "latest"],
         });
@@ -433,6 +601,48 @@ impl WorldClient {
             None => format!("[world-markets] RPC {method} returned no result"),
         }
     }
+}
+
+fn decode_open_orders(
+    words: &[U256],
+    product: &str,
+    side: &str,
+    quantity_decimals: u8,
+) -> (Vec<OpenOrder>, String) {
+    let Some(cursor) = words.first().copied() else {
+        return (Vec::new(), "0".to_string());
+    };
+    let returned = field(cursor, 0, 32) as usize;
+    let restart = field(cursor, 32, 64);
+    let orders = words
+        .iter()
+        .skip(1)
+        .take(returned)
+        .filter(|word| !word.is_zero())
+        .map(|word| {
+            let price_raw = field(*word, 0, 64);
+            let quantity_raw = field(*word, 64, 64);
+            let order_id = field(*word, 128, 64);
+            let order_type_raw = field(*word, 192, 4) as u8;
+            let order_type = match order_type_raw {
+                0 => "limit".to_string(),
+                2 => "fill_all_or_revert".to_string(),
+                3 => "fill_partial_kill_rest".to_string(),
+                other => format!("unknown_{other}"),
+            };
+            OpenOrder {
+                product: product.to_string(),
+                side: side.to_string(),
+                order_id,
+                order_type,
+                quantity_raw,
+                quantity: decimal(quantity_raw, quantity_decimals),
+                price_raw,
+                price: decode_price(price_raw),
+            }
+        })
+        .collect();
+    (orders, restart.to_string())
 }
 
 impl Asset {
@@ -606,7 +816,9 @@ fn decode_price(raw: u64) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{WorldClient, decimal_digits, decode_price, packed_string, signed_field};
+    use super::{
+        WorldClient, decimal_digits, decode_open_orders, decode_price, packed_string, signed_field,
+    };
     use alloy_primitives::U256;
 
     #[test]
@@ -637,6 +849,20 @@ mod tests {
 
         let negative_two = (U256::from(u64::MAX - 1) << 64) | U256::from(1u8);
         assert_eq!(signed_field(negative_two, 64, 64).unwrap(), -2);
+    }
+
+    #[test]
+    fn decodes_open_order_search_words() {
+        let cursor = U256::from(1u8);
+        let price = (12_345u64 << 5) | 2;
+        let word = U256::from(price) | (U256::from(250_000u64) << 64) | (U256::from(77u64) << 128);
+        let (orders, restart) = decode_open_orders(&[cursor, word], "perp", "buy", 4);
+        assert_eq!(restart, "0");
+        assert_eq!(orders.len(), 1);
+        assert_eq!(orders[0].order_id, 77);
+        assert_eq!(orders[0].price, "123.45");
+        assert_eq!(orders[0].quantity, "25.0");
+        assert_eq!(orders[0].order_type, "limit");
     }
 
     #[test]
@@ -678,5 +904,24 @@ mod tests {
         );
         assert_ne!(market.book, "0x0000000000000000000000000000000000000000");
         assert!(account.account_id > 0);
+    }
+
+    #[test]
+    #[ignore = "requires live MegaETH RPC"]
+    fn reads_live_world_permissions_and_open_orders() {
+        let client = WorldClient::default();
+        let assets = client.assets().unwrap();
+        let weth = super::asset_by_symbol(&assets, "WETH").unwrap();
+        let usdm = super::asset_by_symbol(&assets, "USDm").unwrap();
+        let market = client.market("perp", weth, Some(usdm)).unwrap();
+        let account_id = client.latest_account_id().unwrap();
+        let owner = client.owner_for(account_id).unwrap();
+        let permission = client
+            .agent_permission(account_id, &format!("{owner:#x}"))
+            .unwrap();
+        let orders = client.open_orders(&market, account_id).unwrap();
+        assert!(permission.authorized);
+        assert_eq!(permission.authorization, "owner");
+        assert_eq!(orders.account_id, account_id);
     }
 }

@@ -1,6 +1,6 @@
 [package]
 name = "world-markets"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 publish = false
 
@@ -12,6 +12,7 @@ alloy-primitives = "=0.8.25"
 alloy-sol-types = "=0.8.25"
 aomi-sdk = "=3.1.0"
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+rust_decimal = "1.37"
 schemars = "1.0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
