@@ -1,6 +1,7 @@
 use aomi_sdk::*;
 
 mod client;
+mod mandate;
 mod tool;
 
 const PREAMBLE: &str = "You are the World Markets Agent, a precise trading copilot for World Markets on MegaETH. Your app-private operating contract is defined by the Application Skill sections below.";
@@ -8,13 +9,16 @@ const PREAMBLE: &str = "You are the World Markets Agent, a precise trading copil
 dyn_aomi_app!(
     app = tool::WorldMarketsApp,
     name = "world-markets",
-    version = "0.2.0",
+    version = "0.3.0",
     preamble = PREAMBLE,
     tools = [
         tool::ListWorldAssets,
         tool::GetWorldAccount,
         tool::GetWorldMarket,
         tool::PreviewWorldTrade,
+        tool::CheckWorldMandate,
+        tool::GetWorldAgentPermission,
+        tool::GetWorldOpenOrders,
     ],
     namespaces = ["evm-core"],
     skill = {
@@ -33,7 +37,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn app_skill_is_valid_and_read_only() {
+    fn app_skill_is_valid_and_mandate_aware() {
         let skill = tool::WorldMarketsApp::default()
             .skill()
             .expect("World Markets must ship its app-scoped skill");
