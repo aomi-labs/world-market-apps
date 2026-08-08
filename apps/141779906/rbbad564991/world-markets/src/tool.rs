@@ -15,8 +15,11 @@ pub(crate) struct WorldMarketsApp {
 pub(crate) struct ListWorldAssets;
 
 #[derive(Debug, Deserialize, JsonSchema)]
-#[schemars(extend("properties" = {}))]
-pub(crate) struct ListWorldAssetsArgs {}
+pub(crate) struct ListWorldAssetsArgs {
+    /// Optional asset symbols to return. Omit or pass an empty list to return every asset.
+    #[serde(default)]
+    pub(crate) symbols: Vec<String>,
+}
 
 pub(crate) struct GetWorldAccount;
 
@@ -223,17 +226,21 @@ impl DynAomiTool for ListWorldAssets {
     const NAME: &'static str = "list_world_assets";
     const DESCRIPTION: &'static str = "List live World Markets assets and their token IDs, symbols, addresses, decimals, and risk parameters.";
 
-    fn run(
-        app: &WorldMarketsApp,
-        _args: Self::Args,
-        _ctx: DynToolCallCtx,
-    ) -> Result<Value, String> {
+    fn run(app: &WorldMarketsApp, args: Self::Args, _ctx: DynToolCallCtx) -> Result<Value, String> {
+        let mut assets = app.client.assets()?;
+        if !args.symbols.is_empty() {
+            assets.retain(|asset| {
+                args.symbols
+                    .iter()
+                    .any(|symbol| asset.symbol.eq_ignore_ascii_case(symbol))
+            });
+        }
         Ok(json!({
             "source": "world-markets-contract",
             "chain_id": CHAIN_ID,
             "exchange": app.client.exchange(),
             "block_number": app.client.block_number()?,
-            "assets": app.client.assets()?,
+            "assets": assets,
         }))
     }
 }
