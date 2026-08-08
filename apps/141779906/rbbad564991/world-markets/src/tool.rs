@@ -15,6 +15,7 @@ pub(crate) struct WorldMarketsApp {
 pub(crate) struct ListWorldAssets;
 
 #[derive(Debug, Deserialize, JsonSchema)]
+#[schemars(extend("properties" = {}))]
 pub(crate) struct ListWorldAssetsArgs {}
 
 pub(crate) struct GetWorldAccount;

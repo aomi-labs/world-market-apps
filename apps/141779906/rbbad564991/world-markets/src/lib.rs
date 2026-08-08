@@ -9,7 +9,7 @@ const PREAMBLE: &str = "You are the World Markets Agent, a precise trading copil
 dyn_aomi_app!(
     app = tool::WorldMarketsApp,
     name = "world-markets",
-    version = "0.3.0",
+    version = "0.3.1",
     preamble = PREAMBLE,
     tools = [
         tool::ListWorldAssets,
@@ -56,5 +56,15 @@ mod tests {
         skill
             .validate("world-markets")
             .expect("embedded app skill must satisfy the SDK contract");
+    }
+
+    #[test]
+    fn list_world_assets_has_a_valid_empty_object_schema() {
+        let descriptor = tool::ListWorldAssets::descriptor(&tool::WorldMarketsApp::default());
+
+        assert_eq!(
+            descriptor.parameters_schema.get("properties"),
+            Some(&serde_json::json!({}))
+        );
     }
 }
