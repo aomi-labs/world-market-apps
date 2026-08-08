@@ -9,7 +9,7 @@ const PREAMBLE: &str = "You are the World Markets Agent, a precise trading copil
 dyn_aomi_app!(
     app = tool::WorldMarketsApp,
     name = "world-markets",
-    version = "0.3.1",
+    version = "0.3.2",
     preamble = PREAMBLE,
     tools = [
         tool::ListWorldAssets,
@@ -59,12 +59,14 @@ mod tests {
     }
 
     #[test]
-    fn list_world_assets_has_a_valid_empty_object_schema() {
+    fn list_world_assets_schema_exposes_the_optional_symbol_filter() {
         let descriptor = tool::ListWorldAssets::descriptor(&tool::WorldMarketsApp::default());
 
-        assert_eq!(
-            descriptor.parameters_schema.get("properties"),
-            Some(&serde_json::json!({}))
+        assert!(
+            descriptor
+                .parameters_schema
+                .pointer("/properties/symbols")
+                .is_some()
         );
     }
 }

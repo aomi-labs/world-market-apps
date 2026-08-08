@@ -1,0 +1,113 @@
+{
+  "id": "dep_141779906_rbbad564991_2292fd828cfc",
+  "status": "",
+  "sdk_version": "3.1.0",
+  "deployed_at": 1786215904,
+  "source": {
+    "project_id": 1646,
+    "installation_id": 141779906,
+    "repository_id": 1316599490,
+    "repository_link": "ceciliaz030/world-markets-agent",
+    "ref": "2292fd828cfc060530cc65575cc3e0cf448d077c",
+    "commit_hash": "2292fd828cfc060530cc65575cc3e0cf448d077c",
+    "applications": [
+      "aomi.toml"
+    ]
+  },
+  "platform": {
+    "platform": "world-market-apps",
+    "repository": "aomi-labs/world-market-apps",
+    "deploy_branch": "publish",
+    "platform_branch": "ceciliaz030/world-markets-agent/141779906/2292fd828cfc",
+    "commit_hash": null,
+    "pr_number": null,
+    "pr_url": null,
+    "ci_status": null,
+    "ci_url": null,
+    "apps": [
+      {
+        "name": "world-markets",
+        "path": "apps/141779906/rbbad564991/world-markets",
+        "aomi_toml_path": "aomi.toml",
+        "release_tag": "apps-141779906-rbbad564991-world-markets-2292fd828cfc",
+        "sdk_version": "3.1.0",
+        "target": "x86_64-unknown-linux-gnu",
+        "label": "World Markets Agent",
+        "is_public": true,
+        "files": [
+          {
+            "path": ".aomi/config.json",
+            "sha256": "sha256:cfe3480ddca82efd95ec11674db37aebf901b508dd4c79ec9f318940f4ae4818",
+            "bytes": 95
+          },
+          {
+            "path": ".gitignore",
+            "sha256": "sha256:b2d83a6901911c5c0e41532223c955311d86c6935dc956ca22172f7ba15d8395",
+            "bytes": 17
+          },
+          {
+            "path": "Cargo.lock",
+            "sha256": "sha256:c5db0dd796a1a0fbe8cf42ae0ccca49e1927ed924fbf525fc3d9f51b6c6bec40",
+            "bytes": 84043
+          },
+          {
+            "path": "Cargo.toml",
+            "sha256": "sha256:27de2dcfd4aa77cff6c3b32b8ea336400726f1b4740ce1697d49e399c41a9bda",
+            "bytes": 431
+          },
+          {
+            "path": "README.md",
+            "sha256": "sha256:2ad1a7060ba092009119be1ea070d01c4dfef97399044ba2586ed647a62e7594",
+            "bytes": 1174
+          },
+          {
+            "path": "aomi.toml",
+            "sha256": "sha256:42e29ca0812fda65cc1ff397fff338f577390a9c9a6f6661a00dfca52cd3926e",
+            "bytes": 111
+          },
+          {
+            "path": "src/client.rs",
+            "sha256": "sha256:b103c22051e46108a4506a9c8f57da74eac5485d52a39b750ec55465119214d6",
+            "bytes": 33392
+          },
+          {
+            "path": "src/lib.rs",
+            "sha256": "sha256:158cf6676d61762759f6caf010d39d8c996bd40a79d4d6dc5fd8e0aaf84b91f5",
+            "bytes": 2067
+          },
+          {
+            "path": "src/mandate.rs",
+            "sha256": "sha256:3e1be5d6cb564144ab65088c0697ca0d6f8797e3e7f2ae08ab1c04baa52f5bf1",
+            "bytes": 14603
+          },
+          {
+            "path": "src/skill/action-rules.md",
+            "sha256": "sha256:8729772b9cea0de87ff579c2afcfa0022502f621d62eaf83f2f8069dadeeaa9a",
+            "bytes": 1395
+          },
+          {
+            "path": "src/skill/instructions.md",
+            "sha256": "sha256:09839cd76f8a82610733b9c9f3dee1179b8d141acfdabe7b8e1abdb9d13623d0",
+            "bytes": 1396
+          },
+          {
+            "path": "src/skill/safety.md",
+            "sha256": "sha256:165b662c6d9b422116226d27bed343d0201fc6af81dd79efe0c77c638868747d",
+            "bytes": 1234
+          },
+          {
+            "path": "src/skill/workflows.md",
+            "sha256": "sha256:518dc38a6e2f759b2dbc33a4058b37aaf6eef9afe1ea5d471d5744354ec9cbc0",
+            "bytes": 2233
+          },
+          {
+            "path": "src/tool.rs",
+            "sha256": "sha256:8290234d68ee6ca518959fa7d5a00d56a9162d2a6e865e40551f4f7af2dc5163",
+            "bytes": 19961
+          }
+        ],
+        "secret_slots": []
+      }
+    ]
+  }
+}
