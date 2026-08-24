@@ -1,0 +1,17 @@
+{
+  "name": "world-markets-execution-sidecar",
+  "private": true,
+  "type": "module",
+  "description": "Local-only @wcm-inc/sdk signer for aomi-run. The Rust plugin never sees the key.",
+  "scripts": {
+    "start": "tsx src/server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@wcm-inc/sdk": "0.0.9",
+    "ethers": "^6.14.1",
+    "tsx": "^4.20.5"
+  }
+}
