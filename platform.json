@@ -8,6 +8,6 @@
   "deployment_manifest": ".aomi/deployment.json",
   "visibility": "private",
   "review_policy": "partner-review",
-  "required_sdk_version": "3.1.0",
+  "required_sdk_version": "4.0.0",
   "default_target": "x86_64-unknown-linux-gnu"
 }
