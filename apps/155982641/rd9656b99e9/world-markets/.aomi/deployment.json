@@ -1,0 +1,288 @@
+{
+  "id": "dep_155982641_rd9656b99e9_0fc0149ad63a",
+  "status": "",
+  "sdk_version": "4.0.0",
+  "deployed_at": 1787544520,
+  "source": {
+    "project_id": 1658,
+    "installation_id": 155982641,
+    "repository_id": 1327993321,
+    "repository_link": "world-markets-inc/aomi",
+    "ref": "0fc0149ad63ada2ec1d53cb06ef7c73b49a6dcc0",
+    "commit_hash": "0fc0149ad63ada2ec1d53cb06ef7c73b49a6dcc0",
+    "applications": [
+      "aomi.toml"
+    ]
+  },
+  "platform": {
+    "platform": "world-market-apps",
+    "repository": "aomi-labs/world-market-apps",
+    "deploy_branch": "publish",
+    "platform_branch": "world-markets-inc/aomi/155982641/0fc0149ad63a",
+    "commit_hash": null,
+    "pr_number": null,
+    "pr_url": null,
+    "ci_status": null,
+    "ci_url": null,
+    "apps": [
+      {
+        "name": "world-markets",
+        "path": "apps/155982641/rd9656b99e9/world-markets",
+        "aomi_toml_path": "aomi.toml",
+        "release_tag": "apps-155982641-rd9656b99e9-world-markets-0fc0149ad63a",
+        "sdk_version": "4.0.0",
+        "target": "x86_64-unknown-linux-gnu",
+        "label": "World Markets Agent",
+        "is_public": true,
+        "files": [
+          {
+            "path": ".aomi/config.json",
+            "sha256": "sha256:cfe3480ddca82efd95ec11674db37aebf901b508dd4c79ec9f318940f4ae4818",
+            "bytes": 95
+          },
+          {
+            "path": ".env.example",
+            "sha256": "sha256:99a04c91dd1319159c6456feb9a2a5ccc8cca3d18ca660f00e1114815f6f06f3",
+            "bytes": 1741
+          },
+          {
+            "path": ".gitignore",
+            "sha256": "sha256:93227e3a9bc44e2f32b74b61e39116d8bfaf4d02f48dc0fb7fe8bde8644c217e",
+            "bytes": 484
+          },
+          {
+            "path": "Cargo.lock",
+            "sha256": "sha256:961dc9ef3133ba243f5894118dbf1f255e108f0e631e1e55d5cc6bceb30ea113",
+            "bytes": 84043
+          },
+          {
+            "path": "Cargo.toml",
+            "sha256": "sha256:d84961b1abf1ab994d7ae0e49d81cb54647daf537fa44698bd148fadc3fc9996",
+            "bytes": 431
+          },
+          {
+            "path": "README.md",
+            "sha256": "sha256:b97709e5dee28bbc60fa935b57ed97c1088536ffb9f291f698b525094ba79d11",
+            "bytes": 4801
+          },
+          {
+            "path": "aomi.toml",
+            "sha256": "sha256:42e29ca0812fda65cc1ff397fff338f577390a9c9a6f6661a00dfca52cd3926e",
+            "bytes": 111
+          },
+          {
+            "path": "docs/FUTURE-WORK.md",
+            "sha256": "sha256:b93c17e8bf3562f27db2bcdecca44815879497dc1ab1d5e8cda6c21a5ee31877",
+            "bytes": 7091
+          },
+          {
+            "path": "docs/images/aomi-build-connect.jpg",
+            "sha256": "sha256:4ae8b715f4333e489e7af210e01b5908aec860b2741d3448082e7e1abbf1f1a6",
+            "bytes": 46152
+          },
+          {
+            "path": "mandate.dev.example.json",
+            "sha256": "sha256:6cf7cc95409581148e099f27e15009f32ab97d1ccfce0c3fa276ef77c20f8e34",
+            "bytes": 452
+          },
+          {
+            "path": "scripts/dev-run.sh",
+            "sha256": "sha256:33e483cac50d45ce7f9991e917f7c8a1cbb1b0a325425d9d86458f396c753979",
+            "bytes": 1416
+          },
+          {
+            "path": "sidecar/package-lock.json",
+            "sha256": "sha256:8b9b7f2ce57139f4ee5758cb4115cbfe3fa6cc895604f88368a2d2bba14c67c7",
+            "bytes": 21308
+          },
+          {
+            "path": "sidecar/package.json",
+            "sha256": "sha256:dd2815e1c0dff4a835d90b7f352ca55555f960ad8041281c5f344e5169f21fca",
+            "bytes": 380
+          },
+          {
+            "path": "sidecar/src/server.js",
+            "sha256": "sha256:dc49b1fcd340bb44d56274dbb46bad49174a18607b433632367097292aabf2c7",
+            "bytes": 15484
+          },
+          {
+            "path": "src/carry.rs",
+            "sha256": "sha256:2b33534a5a4b675757ef73907562a18081609ec3aacb1798ed5c88e534a77581",
+            "bytes": 10287
+          },
+          {
+            "path": "src/client.rs",
+            "sha256": "sha256:dcf57717489b126208c351ec8036ba27eabeffccc7023c65c30b5a86e9d0a8c5",
+            "bytes": 45024
+          },
+          {
+            "path": "src/execution.rs",
+            "sha256": "sha256:8157fd462208a7024d419ceb99f402f2945ae15b05adf2c38be9bbbf40dff654",
+            "bytes": 6115
+          },
+          {
+            "path": "src/guest.rs",
+            "sha256": "sha256:a685d535703eed2e8154626d01aa1c09a33237f44510da6f054c43c93b7c6402",
+            "bytes": 43406
+          },
+          {
+            "path": "src/lib.rs",
+            "sha256": "sha256:c1fa1b3532d9073722ef007c7297485719c9309382318f5574894775b3937c5d",
+            "bytes": 3633
+          },
+          {
+            "path": "src/liquidation_risk.rs",
+            "sha256": "sha256:59a7f767bf78ba9411986c633584ccec76c2d587af1af18d67ba540646eac8ee",
+            "bytes": 39098
+          },
+          {
+            "path": "src/loans.rs",
+            "sha256": "sha256:42eb8d24a8f99b41ed5c717c54749273c0f3260c0b3d6787bf80f673f96fe76d",
+            "bytes": 11988
+          },
+          {
+            "path": "src/lookups.rs",
+            "sha256": "sha256:3efe14b9e2fd466fcaa841de86f249c314412154c065894293ad6365e719127d",
+            "bytes": 20549
+          },
+          {
+            "path": "src/mandate.rs",
+            "sha256": "sha256:0ac5c62b60e3783ee11fb1fccbd3664123fc5f658f425706ec325da92d827ce0",
+            "bytes": 21917
+          },
+          {
+            "path": "src/pnl.rs",
+            "sha256": "sha256:6b2458b14eac705b7b47aafd03f6fce0702a87916ecc75ba06f7b4f945d32403",
+            "bytes": 30039
+          },
+          {
+            "path": "src/preamble.rs",
+            "sha256": "sha256:f73e336e16af041538e9bf5abdf9273f053acf4efdc71015f189524c9082ed23",
+            "bytes": 2548
+          },
+          {
+            "path": "src/rates.rs",
+            "sha256": "sha256:61be0ec1a596b4ecda014b5d3fc66e3fe546efa28c329a886e25a9a87a13e4f9",
+            "bytes": 9434
+          },
+          {
+            "path": "src/reporting.rs",
+            "sha256": "sha256:60ca5667ceb5a157b5c1b2f22762cc7a0da26a34b590cbdb608e02e03b54a4b1",
+            "bytes": 35863
+          },
+          {
+            "path": "src/skill/action-rules.md",
+            "sha256": "sha256:db809534a2292ae899ef267ffc53feb8bdad5501267d95a0622b4f8e4374da17",
+            "bytes": 4807
+          },
+          {
+            "path": "src/skill/guest.md",
+            "sha256": "sha256:657dc99c9ec155fe4964770b23e35f026a72e6af172c4fdc1472c5b79dc9dd7a",
+            "bytes": 840
+          },
+          {
+            "path": "src/skill/instructions.md",
+            "sha256": "sha256:a445875fca176e0543915444503ca2d431b5fa4a2080766228aa288a8d5821ec",
+            "bytes": 5322
+          },
+          {
+            "path": "src/skill/lookups.md",
+            "sha256": "sha256:c1a4f579cbe7c5bc1a0b9494159f6c9bd155275314fe7a6d0e59baaf9fbcf572",
+            "bytes": 3912
+          },
+          {
+            "path": "src/skill/reference/account-model.md",
+            "sha256": "sha256:bdf5a1d516a9659416d7376647795af0f88f24fe944f7868b66a4ab5f94407f2",
+            "bytes": 1006
+          },
+          {
+            "path": "src/skill/reference/atlas.md",
+            "sha256": "sha256:cd4df8ed98059c9120184c36bd358ca5cf369a9707ded412701f49b557979ca7",
+            "bytes": 697
+          },
+          {
+            "path": "src/skill/reference/dollarpower.md",
+            "sha256": "sha256:beddf36368c7eccd2ef62e249e6f9adf705c8f92148db6dcbe2547a94961dd72",
+            "bytes": 348
+          },
+          {
+            "path": "src/skill/reference/guardian.md",
+            "sha256": "sha256:d6f81a9d4fc0f3e419acbb57fc6666f55cbcdb050a66c04f53f0283215c7a4d9",
+            "bytes": 541
+          },
+          {
+            "path": "src/skill/reference/notifications.md",
+            "sha256": "sha256:db427a557624d8dc8acb273972debf390148fac1d65b6b53c7e0b5730f4c1344",
+            "bytes": 571
+          },
+          {
+            "path": "src/skill/reference/products.md",
+            "sha256": "sha256:41c479fc84765a21f2b9e15f4e4a01f749d331138cfb8e78cee25fcab33da32f",
+            "bytes": 357
+          },
+          {
+            "path": "src/skill/reference/strategy-brain.md",
+            "sha256": "sha256:c6f463559fa84f0b12fde30654b397a43664f23b4212fa986e7376f8b58932cb",
+            "bytes": 1931
+          },
+          {
+            "path": "src/skill/reference/venue.md",
+            "sha256": "sha256:bd8f02311b86125233dc047dd1a0f8cf676fba3ef8f2d4bcda7fc7216d66ad14",
+            "bytes": 281
+          },
+          {
+            "path": "src/skill/safety.md",
+            "sha256": "sha256:93a6d2ca1dd5d7320ce3cd0a6b80bd0f326135d6ae230538c846ead021c7c74c",
+            "bytes": 537
+          },
+          {
+            "path": "src/skill/share.md",
+            "sha256": "sha256:0bbff25be1a9073bc12264de78b804ab9b3f9608375bf4587342e7187fc6107d",
+            "bytes": 284
+          },
+          {
+            "path": "src/skill/workflows.md",
+            "sha256": "sha256:24effe8ce76f2a0eb5a213b7c5b30c524dc969d42a831f47198457ce490708a5",
+            "bytes": 12188
+          },
+          {
+            "path": "src/tool.rs",
+            "sha256": "sha256:89e6059fc507620587ad99d2d5b2c1d7851e85829811b514b7a56943d610c9e8",
+            "bytes": 81780
+          },
+          {
+            "path": "tests/skill_conformance.rs",
+            "sha256": "sha256:c9abf68b6fd14aa230c27467978dba282c93a909a0e7f258a03bbf5d253ef96c",
+            "bytes": 21483
+          },
+          {
+            "path": "tests/templates.rs",
+            "sha256": "sha256:54de86328e15deeeb27ad111499b1e6488aed3e34f594a6e71c48920f029afa3",
+            "bytes": 2962
+          },
+          {
+            "path": "tests/trading-suite/README.md",
+            "sha256": "sha256:e7db40f920d8034a52d31daf9773bd0c82027001dd0020ff935c56a62a42043a",
+            "bytes": 344
+          },
+          {
+            "path": "tests/trading-suite/cases.json",
+            "sha256": "sha256:548c170d7f17d673282cde9fa493797c9dea9f61238496f0216d8aa98344e587",
+            "bytes": 12196
+          },
+          {
+            "path": "tests/trading-suite/mandate.json",
+            "sha256": "sha256:13ca6264bf85433cf30c8f5043af74f91ebfbf123b22f7693fcf7ba0041d77f9",
+            "bytes": 869
+          },
+          {
+            "path": "tests/trading-suite/run.py",
+            "sha256": "sha256:b357079e357ae450df92306e2983f0cad39a47ef5b568c5edbd1d44ec1143d69",
+            "bytes": 6001
+          }
+        ],
+        "secret_slots": []
+      }
+    ]
+  }
+}

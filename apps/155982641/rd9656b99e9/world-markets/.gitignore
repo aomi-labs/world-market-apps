@@ -1,0 +1,23 @@
+# Rust build output
+/target
+
+# Local-only editor, plan, and collaborator docs — do not commit
+/.cursor/rules/
+/dev_artifacts/
+/.hermes/plans/
+
+# Local secrets / dev-runtime env
+.env
+.env.*
+!.env.example
+
+# Local Aomi deployment lifecycle state
+/.aomi/deployment.json
+
+# Execution sidecar
+/sidecar/node_modules/
+
+# Local-only live trading suite artifacts (the suite itself lives in tests/)
+/tests/trading-suite/logs/
+/tests/trading-suite/results.json
+/tests/trading-suite/results.md
