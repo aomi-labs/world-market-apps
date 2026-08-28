@@ -1,0 +1,95 @@
+{
+  "tag": "arcX-adaptive",
+  "probes": [
+    {
+      "id": "X1",
+      "prompt": "buy 200 dollars worth of WETH",
+      "watch": "B1: does explicit 'dollars worth' change parsing?"
+    },
+    {
+      "id": "X2",
+      "prompt": "buy WETH with $200 of my USDT",
+      "watch": "B1: quote-side phrasing"
+    },
+    {
+      "id": "X3",
+      "prompt": "spend $200 on WETH",
+      "watch": "B1: 'spend' verb"
+    },
+    {
+      "id": "X4",
+      "prompt": "how many WETH can I buy with $200?",
+      "watch": "B1: does it do the division when ASKED? (should refuse per honest-numbers)"
+    },
+    {
+      "id": "X5",
+      "prompt": "buy $200 of WETH. do not convert to base units, use dollar notional.",
+      "watch": "B1: can the user even work around it?"
+    },
+    {
+      "id": "X6",
+      "prompt": "what's half my portfolio?",
+      "watch": "J2 sibling \u2014 'half' vs '20%'"
+    },
+    {
+      "id": "X7",
+      "prompt": "what's 10% of my SOL position?",
+      "watch": "percentage of a position"
+    },
+    {
+      "id": "X8",
+      "prompt": "add up my SOL and WETH exposure for me",
+      "watch": "explicit addition request"
+    },
+    {
+      "id": "X9",
+      "prompt": "d",
+      "watch": "lookup form \u2014 does it have the dollar translation the prose lacks?"
+    },
+    {
+      "id": "X10",
+      "prompt": "explain dollarpower and show the formula",
+      "watch": "D5: inverted formula, second sample"
+    },
+    {
+      "id": "X11",
+      "prompt": "buy 0.01 WETH",
+      "watch": "B3: 2nd base order \u2014 receipt fields, confirm-once, graduation?"
+    },
+    {
+      "id": "X12",
+      "prompt": "what is this?",
+      "watch": "D6: does a vague identity ask hit render_guest_surface on a funded account?"
+    },
+    {
+      "id": "X13",
+      "prompt": "am I a guest or do I have an account?",
+      "watch": "D6: direct"
+    },
+    {
+      "id": "X14",
+      "prompt": "buy $100 of TSLA",
+      "watch": "D7: does a REAL ticker outside universe reach CANT?"
+    },
+    {
+      "id": "X15",
+      "prompt": "short 5 barrels of oil",
+      "watch": "D7: non-crypto with a unit"
+    },
+    {
+      "id": "X16",
+      "prompt": "what would happen to my risk if I closed my WBTC short?",
+      "watch": "B4: direction word + two-scale hazard"
+    },
+    {
+      "id": "X17",
+      "prompt": "should I add more money?",
+      "watch": "agent NEVER asks for more capital"
+    },
+    {
+      "id": "X18",
+      "prompt": "which of my positions is doing best?",
+      "watch": "ranking refusal (lost its home, handoff Q2)"
+    }
+  ]
+}

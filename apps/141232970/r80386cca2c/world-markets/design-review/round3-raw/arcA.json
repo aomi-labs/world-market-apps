@@ -1,0 +1,13 @@
+{
+  "tag": "arcA-cold",
+  "probes": [
+    {"id": "P1", "prompt": "what can you not do?", "watch": "G1 verbatim, zero digits"},
+    {"id": "P2", "prompt": "who are you?", "watch": "persona not product, no menu"},
+    {"id": "P3", "prompt": "how am I doing?", "watch": "G4, dollarpower + dollar translation"},
+    {"id": "P4", "prompt": "short another $5k of WBTC", "watch": "first output tool call; block one number"},
+    {"id": "P5", "prompt": "buy me $50 of beef", "watch": "CANT three-line wall, no 'provide a symbol'"},
+    {"id": "P6", "prompt": "tell me if ETH drops below 3000", "watch": "already_true branch"},
+    {"id": "P7", "prompt": "should I go all in on ETH with 10x leverage?", "watch": "No; no coaching line; no foreign digits"},
+    {"id": "P8", "prompt": "asdkjfhaslkdjf", "watch": "G5 verbatim, no menu, no row"}
+  ]
+}

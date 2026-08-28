@@ -1,0 +1,175 @@
+{
+  "account_id": 17,
+    "notes": [
+    "Local UniFi live suite. The runner binds tests/trading-suite/mandate.json (WETH/SOL/WBTC/USDT).",
+    "Swap is out of scope. Lend rates must be 4-decimal ticks (0.0001, 0.9900, …).",
+    "Lot sizes from live UniFi: spot 0.01, perp 0.1, USDT lend 100, WETH lend 0.05, SOL lend 1. Far-from-market limits rest; markets fill."
+  ],
+  "trades": [
+    {
+      "id": 1,
+      "name": "spot_limit_buy",
+      "coverage": "spot limit buy, explicit order_type=limit",
+      "prompt": "Call execute_world_order exactly once: product=spot, side=buy, base_symbol=WETH, quote_symbol=USDT, quantity=0.01, price=101, order_type=limit, account_id=17. Far-from-market resting buy. Quote transaction_hash or the error verbatim. Do not cancel. Do not preview instead of execute."
+    },
+    {
+      "id": 2,
+      "name": "cancel_spot_buy",
+      "coverage": "cancel spot by order_id",
+      "prompt": "Account 17. Call get_world_open_orders for spot WETH/USDT. Cancel the resting spot buy of 0.01 WETH at price 101 using cancel_world_order (product=spot, side=buy, base_symbol=WETH, quote_symbol=USDT, account_id=17, order_id from the tool). Quote the cancel transaction_hash or the error verbatim. Confirm with get_world_open_orders that the 101 bid is gone."
+    },
+    {
+      "id": 3,
+      "name": "spot_limit_sell",
+      "coverage": "spot limit sell far above mark",
+      "prompt": "Call execute_world_order exactly once: product=spot, side=sell, base_symbol=WETH, quote_symbol=USDT, quantity=0.01, price=49000, order_type=limit, account_id=17. Far-from-market resting sell. Quote transaction_hash or the error verbatim. Do not cancel. Do not preview instead of execute."
+    },
+    {
+      "id": 4,
+      "name": "cancel_spot_sell",
+      "coverage": "cancel spot sell by order_id",
+      "prompt": "Account 17. Call get_world_open_orders for spot WETH/USDT. Cancel the resting spot sell of 0.01 WETH at price 49000 using cancel_world_order (product=spot, side=sell, base_symbol=WETH, quote_symbol=USDT, account_id=17, order_id from the tool). Quote the cancel transaction_hash or the error verbatim."
+    },
+    {
+      "id": 5,
+      "name": "perp_limit_long",
+      "coverage": "perp limit long, side=long alias",
+      "prompt": "Call execute_world_order exactly once: product=perp, side=long, base_symbol=WETH, quote_symbol=USDT, quantity=0.1, price=102, order_type=limit, account_id=17. Far-from-market resting long. Quote transaction_hash or the error verbatim. Do not cancel. Do not preview instead of execute."
+    },
+    {
+      "id": 6,
+      "name": "cancel_perp_long",
+      "coverage": "cancel perp long by order_id",
+      "prompt": "Account 17. Call get_world_open_orders for perp WETH/USDT. Cancel the resting perp long of 0.1 WETH at price 102 using cancel_world_order (product=perp, side=long, base_symbol=WETH, quote_symbol=USDT, account_id=17, order_id from the tool). Quote the cancel transaction_hash or the error verbatim."
+    },
+    {
+      "id": 7,
+      "name": "perp_limit_short",
+      "coverage": "perp limit short, side=short alias",
+      "prompt": "Call execute_world_order exactly once: product=perp, side=short, base_symbol=WETH, quote_symbol=USDT, quantity=0.1, price=49100, order_type=limit, account_id=17. Far-from-market resting short. Quote transaction_hash or the error verbatim. Do not cancel. Do not preview instead of execute."
+    },
+    {
+      "id": 8,
+      "name": "cancel_perp_short",
+      "coverage": "cancel perp short by order_id",
+      "prompt": "Account 17. Call get_world_open_orders for perp WETH/USDT. Cancel the resting perp short of 0.1 WETH at price 49100 using cancel_world_order (product=perp, side=short, base_symbol=WETH, quote_symbol=USDT, account_id=17, order_id from the tool). Quote the cancel transaction_hash or the error verbatim."
+    },
+    {
+      "id": 9,
+      "name": "borrow_limit",
+      "coverage": "lend book borrow at a rate that should rest",
+      "prompt": "Call execute_world_order exactly once: product=lend, side=borrow, base_symbol=WETH, quote_symbol=USDT, quantity=0.1, price=0.0001, order_type=limit, account_id=17. Far-from-market resting borrow. Quote transaction_hash or the error verbatim. Do not cancel. Do not preview instead of execute."
+    },
+    {
+      "id": 10,
+      "name": "cancel_borrow",
+      "coverage": "cancel lend/borrow by interest_rate",
+      "prompt": "Call cancel_world_order exactly once: product=lend, side=borrow, base_symbol=WETH, quote_symbol=USDT, interest_rate=0.0001, account_id=17. Quote the cancel transaction_hash or the error verbatim. Do not preview instead of execute."
+    },
+    {
+      "id": 11,
+      "name": "spot_limit_inferred",
+      "coverage": "limit inferred from price (omit order_type)",
+      "prompt": "Call execute_world_order exactly once: product=spot, side=buy, base_symbol=WETH, quote_symbol=USDT, quantity=0.01, price=103, account_id=17. Omit order_type so limit is inferred from price. Far-from-market resting buy. Quote transaction_hash or the error verbatim. Do not cancel. Do not preview instead of execute."
+    },
+    {
+      "id": 12,
+      "name": "cancel_spot_inferred",
+      "coverage": "cancel inferred-limit spot buy",
+      "prompt": "Account 17. Call get_world_open_orders for spot WETH/USDT. Cancel the resting spot buy of 0.01 WETH at price 103 using cancel_world_order (product=spot, side=buy, base_symbol=WETH, quote_symbol=USDT, account_id=17, order_id from the tool). Quote the cancel transaction_hash or the error verbatim."
+    },
+    {
+      "id": 13,
+      "name": "spot_market_buy",
+      "coverage": "spot market/IOC buy (fills)",
+      "prompt": "Call execute_world_order exactly once: product=spot, side=buy, base_symbol=WETH, quote_symbol=USDT, quantity=0.01, order_type=market, account_id=17. No price. Quote transaction_hash or the error verbatim. Do not preview instead of execute."
+    },
+    {
+      "id": 14,
+      "name": "spot_market_sell",
+      "coverage": "spot market/IOC sell (unwinds 13)",
+      "prompt": "Call execute_world_order exactly once: product=spot, side=sell, base_symbol=WETH, quote_symbol=USDT, quantity=0.01, order_type=market, account_id=17. No price. Quote transaction_hash or the error verbatim. Do not preview instead of execute."
+    },
+    {
+      "id": 15,
+      "name": "perp_buy_alias_roundtrip",
+      "coverage": "perp side=buy alias for long, then cancel in the same turn",
+      "prompt": "Account 17. First call execute_world_order exactly once: product=perp, side=buy, base_symbol=WETH, quote_symbol=USDT, quantity=0.1, price=104, order_type=limit. Quote that transaction_hash. Then call get_world_open_orders for perp WETH/USDT and cancel_world_order for the resting 0.1 long at 104 (product=perp, side=buy, base_symbol=WETH, quote_symbol=USDT, account_id=17). Quote the cancel transaction_hash. Both must succeed. Do not preview instead of execute.",
+      "min_hashes": 2
+    },
+    {
+      "id": 16,
+      "name": "list_tradable_markets",
+      "coverage": "list_world_assets plus spot/perp/lend books for each non-quote symbol",
+      "min_hashes": 0,
+      "expect": "markets",
+      "prompt": "Account 17. Call list_world_assets. Then for every listed base symbol other than USDT, call get_world_market for product=spot with quote_symbol=USDT when the book exists, and also get_world_rates. Reply with a single inventory: every asset symbol, and which of spot/perp/lend markets the tools showed as live. Numbers and symbols from tools only. Do not execute."
+    },
+    {
+      "id": 17,
+      "name": "lend_usdt_limit",
+      "coverage": "USDT lend book, 4-decimal rate far from market",
+      "prompt": "Call execute_world_order exactly once: product=lend, side=lend, base_symbol=USDT, quote_symbol=USDT, quantity=100, price=0.9900, order_type=limit, account_id=17. Far-from-market resting lend. Quote transaction_hash or the error verbatim. Do not cancel. Do not preview instead of execute."
+    },
+    {
+      "id": 18,
+      "name": "cancel_lend_usdt",
+      "coverage": "cancel USDT lend by interest_rate",
+      "prompt": "Call cancel_world_order exactly once: product=lend, side=lend, base_symbol=USDT, quote_symbol=USDT, interest_rate=0.9900, account_id=17. Quote the cancel transaction_hash or the error verbatim."
+    },
+    {
+      "id": 19,
+      "name": "lend_sol_limit",
+      "coverage": "SOL lend book, different spot asset",
+      "prompt": "Call execute_world_order exactly once: product=lend, side=lend, base_symbol=SOL, quote_symbol=USDT, quantity=0.1, price=0.9900, order_type=limit, account_id=17. If QuantityTooLow or QuantityNotMultipleOfMin, retry once with quantity=1. Far-from-market resting lend. Quote transaction_hash or the error verbatim. Do not cancel. Do not preview instead of execute."
+    },
+    {
+      "id": 20,
+      "name": "cancel_lend_sol",
+      "coverage": "cancel SOL lend by interest_rate",
+      "prompt": "Call cancel_world_order exactly once: product=lend, side=lend, base_symbol=SOL, quote_symbol=USDT, interest_rate=0.9900, account_id=17. Quote the cancel transaction_hash or the error verbatim."
+    },
+    {
+      "id": 21,
+      "name": "lend_weth_limit",
+      "coverage": "WETH lend at 0.05 (live min lot)",
+      "prompt": "Call execute_world_order exactly once: product=lend, side=lend, base_symbol=WETH, quote_symbol=USDT, quantity=0.05, price=0.9900, order_type=limit, account_id=17. Far-from-market resting lend. If QuantityTooLow or QuantityNotMultipleOfMin, retry once with quantity=0.1. Do not increase size on BalanceTooLow. Quote transaction_hash or the error verbatim. Do not cancel. Do not preview instead of execute."
+    },
+    {
+      "id": 22,
+      "name": "cancel_lend_weth",
+      "coverage": "cancel WETH lend by interest_rate",
+      "prompt": "Call cancel_world_order exactly once: product=lend, side=lend, base_symbol=WETH, quote_symbol=USDT, interest_rate=0.9900, account_id=17. Quote the cancel transaction_hash or the error verbatim."
+    },
+    {
+      "id": 23,
+      "name": "open_perp_long_market",
+      "coverage": "open a filled perp long (then close in the next case)",
+      "prompt": "Call execute_world_order exactly once: product=perp, side=long, base_symbol=WETH, quote_symbol=USDT, quantity=0.1, order_type=market, account_id=17. No price. This opens a live long. Quote transaction_hash or the error verbatim. Do not close it in this turn. Do not preview instead of execute."
+    },
+    {
+      "id": 24,
+      "name": "close_perp_long_market",
+      "coverage": "close the perp long opened in the previous case",
+      "prompt": "Account 17. Call get_world_account. Then flatten the WETH perp long from the previous turn: execute_world_order product=perp, side=short, base_symbol=WETH, quote_symbol=USDT, quantity=0.1, order_type=market, account_id=17. Quote transaction_hash or the error verbatim. Do not preview instead of execute."
+    },
+    {
+      "id": 25,
+      "name": "market_borrow_weth",
+      "coverage": "fill a WETH borrow so a loan exists",
+      "prompt": "Call execute_world_order exactly once: product=lend, side=borrow, base_symbol=WETH, quote_symbol=USDT, quantity=0.1, order_type=market, account_id=17. No price — this should fill against the lend book. Quote transaction_hash or the error verbatim. Do not pay or close yet. Do not preview instead of execute."
+    },
+    {
+      "id": 26,
+      "name": "pay_weth_loan_interest",
+      "coverage": "pay interest on the borrower loan (no extend)",
+      "prompt": "Account 17. Call get_world_loans. Then call pay_world_loan_interest with account_id=17, base_symbol=WETH, extend_period=false. Do not pass a position_id unless it is a numeric on-chain id (ignore agg: ids). Quote transaction_hash from the pay tool, or the error verbatim. Do not close the loan in this turn."
+    },
+    {
+      "id": 27,
+      "name": "close_weth_loan",
+      "coverage": "close the borrower loan opened earlier",
+      "prompt": "Account 17. Call get_world_loans. Then call close_world_loan with account_id=17 and base_symbol=WETH. Do not pass a position_id unless it is a numeric on-chain id (ignore agg: ids). Quote transaction_hash or the error verbatim."
+    }
+  ]
+}
