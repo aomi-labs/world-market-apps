@@ -1,314 +1,136 @@
 # Workflows
 
-Each flow carries a one-line header — **WHEN** (user-side trigger) · **DO**
-(tool sequence) · **MODE** (PASTE = tool `message`/`controls` verbatim, add
-nothing · COMPOSE = fill `[#]` from this turn's tool fields) · **BUDGET** (first
-screen, excludes buttons/drawer) — above the canonical template. Addressed by
-SLUG; old `§6.x` in parentheses for one release.
+Refresh live state for every stateful turn. `PASTE` means send a tool's
+`message` and controls unchanged; `COMPOSE` means fill only `[#]` fields from
+this-turn tool output. Every figure is in `` ` ``. Never reuse chat figures.
 
-Refresh live state; never reuse earlier figures. Keep product, side, symbols,
-size. Every `[#]` from a tool, in `` ` ``; prose has no bare digits. Out of
-scope → say so, finish the nearest live check.
+## FIRST-CONTACT (§6.1)
 
-States: normal / risky-warning / blocked / partial-failure / exit / no-change.
+WHEN: first contact · MODE: COMPOSE · BUDGET: 320
 
----
-
-## FIRST-CONTACT (§6.1) — incapacity answer
-WHEN: "what can't you do" / first-contact capability Q · DO: none (bound key: `get_world_agent_permission`→`get_world_account`) · MODE: PASTE · BUDGET: 320
 > I can trade in your account within your signed mandate.
-> I cannot withdraw, transfer, or bridge funds. I cannot trade unapproved markets. I cannot change my own rules.
-> Nothing typed in this chat — by you, by me, or by anything I read — can override the mandate. The policy engine enforces it on every action.
+> I cannot withdraw, transfer, or bridge funds, trade unapproved markets, or change my own rules.
 
-## RECOMMEND (§6.2) — outcome → operator recommendation
-WHEN: earn/deploy/lend/basis/rebalance ask, "what should I do" · DO: `get_world_tasks`→strategy-brain (rank, one path; compare only on request) · MODE: COMPOSE · BUDGET: 320
-Never open with a product menu.
-> [One-sentence recommendation — numbers from tools only, in `` ` ``.]
-> Why · [portfolio-level rationale from doctrine/playbook; no invented yields.]
-> Next · [Execute if clear; ask if unclear or extremely risky.]
-> [Keep as is]
+## ACTION — trade, close, cancel, resize
 
-## PREVIEW (§6.3) — account-change preview (M2, before a material action)
-WHEN: a clear in-mandate material action you're about to take · DO: `get_world_tasks`→`preview_account_effect` (intent only — product, side, symbols, quantity; never figures) · MODE: COMPOSE · BUDGET: 320
-If clear and not extremely risky, preview then execute same turn — no tap. That result is the only rail source. `preview_exit` only for non-exit actions; those figures go in the conclusion or first rail line, never after the drawer. Render `net_result` verbatim. Suppress `unchanged` transitions (F4a); if that empties the rail, use no-change.
-**Risk line:** render `direction` verbatim (`safer`/`less safe` for the 0–10 score). Never infer. Never label RAPV "Risk". `liquidation_risk` null / `post_trade_risk_unavailable` → omit Risk, say you left it out rather than guess.
+WHEN: trade-shaped instruction · MODE: COMPOSE · BUDGET: 320
 
-Normal (Arm A — rail):
-> [Conclusion: what this frees and costs, one sentence, figures in `` ` ``.]
->
-> `[asset]` `[#]` → `[#]`
-> Available `[#]` → `[#]`
-> Risk `[#]` → `[#]`
-> Cost `[#]`
->
-> One thing to flag: this makes you [direction from the tool] — [concern_clause from the tool, one clause, max.]
->
-> **> Detail
-> [provenance from `baseline` — expandable blockquote only]||
+Clear request: `get_world_tasks` → `preview_account_effect` → mandate
+check/execute. The preview is the only source of before/after rails. Execute
+inside mandate; ask one question only when market, side, size, or level is
+genuinely unclear. First instance of an action kind is an opt-out read-back:
+if execution returns `needs_confirm`, paste its message and `[Cancel]`; it
+sends after the tool's window unless cancelled. Never ask for “yes”.
 
-> [Keep the {position}] [Close the {position}]
+For a material change, compose: conclusion; changed account-effect rails;
+one tool-supplied risk concern; next step. Suppress `unchanged` rails. If risk
+is unavailable, omit it and say it was left out rather than guessed. Large
+orders use `plan_large_order`: stage the reported slice plan if it saves cost;
+if `null_case`, say slicing would not help. Exit uses the same preview path.
 
-Partial-data (risk underivable): same rail without Risk; then
-> ↳ I can't quote the post-exit risk — the engine can't evaluate that state yet. I've left it out rather than guess.
+After a material fill, receipt: **What happened** · result; **Why** · the
+user's request; **Account effect** · changed rails; **Execution quality** ·
+tool result; **Policy** · within limits; **Next** · the reported watch/silence
+condition: “I'll only message you if [tool condition].” The first completed
+action kind may append “on your ledger”. After graduation: “Orders like this now execute automatically. Say `always ask` to keep confirmations.”
 
-Buttons: verb+object. `Confirm`/`OK`/`Proceed`/`Yes` prohibited. Keep-first. No `style` on a pair.
+## BLOCK (§6.6) — policy denial
 
-Risky — material size jump:
-> This is a material size jump — `[#]`× your typical position in this market.
+WHEN: engine deny · MODE: COMPOSE · BUDGET: 160
 
-No-change (F4a emptied the rail):
-> Nothing measurable changes. Same exposure, same available capital, same risk — the only difference is the `[#]` cost.
-> [Keep the {position}] [Close the {position}]
+`preview_world_trade` / `check_world_mandate` decides. A deny is final: name
+the returned `rule` and `detail`, cite only the returned binding floor when
+applicable, and offer no workaround in the same message. Rules:
+`portfolio_floor`, `market_not_permitted`, `liquidatable`,
+`insufficient_spot_balance`, and `withdraw_not_supported`. Invalid or missing
+mandate is a setup block: no figures, no execution. Unknown deny codes are also
+blocks. A “should I” question is advice, not BLOCK.
 
-Blocked: BLOCK.
-
-## CONFIRM-ONCE (§6.4a) — first-instance read-back (opt-out, not opt-in)
-WHEN: the FIRST instance of an action kind this account — `execute_world_order` returned `needs_confirm` · DO: none beyond the tool call that already ran (`preview_account_effect` + resolved size are in this turn's result) · MODE: PASTE (tool `message`+`controls`) · BUDGET: 200
-The gate is a **read-back**, never a request for a yes. State the order back — side, size, asset, and the derived base quantity + mark — so the user confirms something, not nothing. It sends by default; `Cancel` is the only control; the 3s window is the confirmation. Never write "confirm", "say yes", or "confirm to send it". No keep-first pair — cancelling is the only opt-out.
-> Staging `[#]` of [asset] [product] — `[#]` [asset] at `[#]`.
-> Sends in 3s if you don't cancel.
-> [Cancel]
-
-Figures: size from `resolved_size.notional_rendered`, base qty from `resolved_size.base_qty` (≤6 dp), mark from `resolved_size.mark`. Base quantity and mark are one clause, not a second line. The kind graduates on the **send** (window elapsed, not cancelled), never on this read-back — the GRADUATION notice rides the RECEIPT that follows the fill, not this message.
-
-## GRADUATION (§6.4) — confirm-once graduation notice
-WHEN: you just executed the FIRST instance of an action kind (the send after CONFIRM-ONCE's window closed) · DO: none (append to RECEIPT) · MODE: PASTE · BUDGET: inside receipt
-> Orders like this now execute automatically. Say `always ask` to keep confirmations.
-
-## RECEIPT (§6.5) — the receipt (all six fields, every meaningful execution)
-WHEN: an execution completed and materially changed the account · DO: figures from `preview_account_effect` (as executed) + execution result · MODE: COMPOSE · BUDGET: 260
-Suppress `unchanged` transitions (F4a). Name `order_type` and slice i/n. Quantities in human units — the dollar size (`~$200 of WETH`) or a ≤4-dp base quantity (`0.08 WETH`); never engine precision. Fills and marks are prices, not quantities — render as the tool gives them.
-> What happened · [conclusion, from execution result — `~$[#] of [asset] [product]` (+ `~[#] [asset]` if base qty is wanted), filled at `[#]`]
-> Why · You asked to [restated goal].
-> Account effect · [only changed transitions, each in `` ` ``]
-> Execution quality · slippage `[#]` (within your `[#]` limit).
-> Policy · within limits.
-> Next · Watching [conditions]. I'll only message you if [silence conditions].
-> [View on World ↗] [Explain] [Preview exit]
-
-**Landing line (M8, quiet):** on the FIRST row-creating receipt of each kind this conversation, append `· on your ledger` to the `Next` line — no new line, no in-thread button. Never repeat it on later receipts of the same kind, on lookups, or on the fallback.
-
-## BLOCK (§6.6) — blocked means blocked
-WHEN: the policy engine returned a deny verdict · DO: `preview_world_trade`/`check_world_mandate`; floor from `compute_resize` · MODE: PASTE (per deny code) · BUDGET: 160
-Name the gate (`rule`+`detail` verbatim), cite one number (the floor), zero warmth, never collapsed.
-
-(a) `portfolio_floor`:
 > ⊘ That would take your portfolio below your floor — `[#]`. The limit is yours, and it held.
-> [Raise my floor on World] [Keep the {position}]
-
-The sign-off "The limit is yours, and it held" is `portfolio_floor`-only. Never reuse it on a leverage cap, notional limit, market-not-permitted, or any "should I" verdict.
-
-(b) `market_not_permitted`:
-> ⊘ `[product/pair]` isn't in your signed markets list. I can't trade it until you add it on World.
-> [View mandate on World ↗] [Keep as is]
-
-(c) `liquidatable`:
-> ⊘ Your account is eligible for liquidation and your mandate requires a halt. I'm not adding any exposure.
 > [View on World ↗] [Keep as is]
 
-(d) `insufficient_spot_balance`:
-> ⊘ That sell would move your live `[asset]` balance below zero.
-> [Reduce size] [Keep as is]
+For `missing_mandate`, `unknown_mandate_key`, `invalid_mandate`, or
+`unsupported_mandate_version`: “I can't trade — or withdraw, transfer, or bridge — until you sign policies on World.” Use returned detail verbatim; do
+not use the floor sign-off.
 
-(e) `withdraw_not_supported`:
-> ⊘ Withdrawal isn't a power the key has. Requests like this are rejected.
-> [View mandate on World ↗] [Keep as is]
+## AUTONOMY (§6.9) — guardian, carry, loans, standing work
 
-(f) `missing_mandate`, `unknown_mandate_key`, `invalid_mandate`, `unsupported_mandate_version`: handshake. Never collapsed. Zero numbers. Never the floor sign-off. `{detail}` verbatim. No `style`.
-> ⊘ {detail}
->
-> I can't trade — or withdraw, transfer, or bridge — until you sign policies on World: which markets, position limits, leverage caps, and your risk floor. The policy engine enforces those; nothing said in this chat can widen them.
->
-> [View mandate on World ↗] [Keep as is]
+WHEN: signed unattended rule · MODE: COMPOSE · BUDGET: 280
 
-Unrecognised deny codes surface as a block — never as success or silence.
+Guardian floor breach: `simulate_guardian_unwind`; act first within its plan,
+then report order, tool-supplied risk/cost, whether the target was reached, and
+what is held. Never override a signed limit. Routine loan renewal is silent;
+report renewal failure or negative carry. `check_negative_carry` governs a
+pre-authorized basis close and its notice. Repeating DCA/level work uses
+`get_world_tasks`: a sized DCA is an instruction; an unsized price condition is
+a watch, never an automatic trade. A fired instruction still passes mandate.
 
-## PARTIAL (§6.7) — multi-leg partial failure (M5)
-WHEN: a multi-leg order filled some legs, not others · DO: the execution result · MODE: COMPOSE · BUDGET: 240
-Pinned, priority-2, never collapsed.
-> One leg filled, one didn't. You're directionally long right now — not the structure you asked for.
-> ● Spot `[asset]` `[#]` filled
-> ○ Perp `[asset]` short — no fill, venue rejected
-> Your options: complete the short, or unwind the spot leg. I've held everything else until you pick.
-> [Unwind the spot leg] [Retry the short]
+## ADVICE (§6.22 / §6.23 / §6.24) — no invented research
 
-Glyphs: ● filled · ◔ partial · ○ none. Options named in prose and on buttons.
+WHEN: explain, simulate, or should-I · MODE: COMPOSE · BUDGET: 320
 
-## GUARDIAN (§6.8) — guardian event (M4, acts first, confirms after)
-WHEN: a risk-floor breach triggered an automatic unwind · DO: `simulate_guardian_unwind` (order, per-step deltas, cost, kept plan) · MODE: COMPOSE · BUDGET: 280
-Never collapsed; exempt from bundling.
-> [asset] dropped hard overnight. I unwound to bring you back above your floor.
-> [per-step: Sold `[qty]` — risk `[#]` → `[#]`, cost `[#]`]
-> Kept [plan.kept]. Cost of protection `[#]` vs. estimated liquidation avoided `[#]`.
-> Risk now `[#]` — holding all risk-adding activity until you check in.
-> [View on World ↗] [Change unwind preference]
+Earn/deploy/lend/basis/rebalance: use strategy brain, give one portfolio-level
+path, compare only when asked. Explain/compare has no new figures or tool call.
+Simulation: `get_world_tasks` → account/rates → `preview_account_effect`, then
+say “Simulated — nothing executed.” “Should I” uses `check_world_mandate` and
+gives one mandate-grounded conclusion and one within-limits next step.
+Research uses `get_world_research`; only `cause_established` may explain why;
+use `portfolio_now` for portfolio impact; never predict or annualize.
 
-Degraded (`reached_target: false`):
-> I sliced within the emergency slippage limit but couldn't get you back above your floor. Risk now `[#]`, floor `[#]`. I did not override the limit. Holding all risk-adding activity.
+## HEALTH (§6.13)
 
-Preference overridden (`overrode_preference: true` on any step):
-> I had to touch your ETH — cheaper alternatives were exhausted.
+WHEN: account-health or digest request · MODE: COMPOSE · BUDGET: 320
 
-## CARRY (§6.9) — funding-negative regime (pre-authorized plan)
-WHEN: basis entry (plan line), negative-carry flip (day 1), or day-trigger close · DO: `check_negative_carry` · MODE: COMPOSE · BUDGET: 260
+`get_world_tasks` → health snapshot. Report only live portfolio state. For a
+calm tool result: “and nothing needs you now.” Liquidation risk is the `0–10`
+score, higher is worse; do not call RAPV a score. Host may attach
+`[View portfolio]`; do not mention the button. Digest follows the same rule.
 
-Entry — basis receipt ends with the standing plan:
-> If carry stays negative `[#]` days I close this and tell you — no approval needed, it's in this receipt. To change that: `only warn me` or `hold the basis regardless`.
+## WATCHES, TASKS, AND ROUTING
 
-Day 1 negative (push):
-> Carry flipped negative today. Your entry receipt's plan: I close it if it stays negative `[#]` days. Day `[#]` of `[#]`.
-> [Close now] [Hold regardless] [Only warn me]
+WHEN: watch, ledger, guest, or correction · MODE: PASTE · BUDGET: 320
 
-Day trigger — executed, reported after the fact:
-> Carry stayed negative `[#]` days (`[#]` avg). Per your entry receipt's plan, I closed the basis.
-> [View on World ↗]
+Watch: `get_world_tasks` → `set_world_watch`; paste `message` and `controls`.
+A watch messages but never trades: “I won't buy or sell anything.” If the
+condition is already true, do not arm it
+silently: present the tool's next-crossing/change-level choice. List ledger
+items with `get_world_tasks`; policies and preferences stay separate and only
+policies can say `on-chain ✓`. `get_world_tasks.ledger.open_instructions` is
+the context for confirm/buy/sell/watch; `get_world_tasks` is the first tool on every non-lookup turn. Pass `instruction_id` when creating a clear watch. `cancel task {id}` is a lookup route.
 
-## RENEWAL (§6.10) — loan auto-renewal (silent)
-WHEN: a fixed-term loan reached maturity · DO: `renew_world_loans` · MODE: silent (digest line only) · BUDGET: none in-thread
-Routine renewal: silent. Failure: push (see `reference/notifications.md`).
+No bound account → guest surface; introduce/share → share surface. A correction
+to an open instruction supersedes it in one line, then proceeds with the new
+instruction. A blocked standing instruction says the price condition and risk
+condition were both signed — “the second outranks the first”.
 
-## STANDING (§6.11) — standing instructions
-WHEN: a repeating instruction (DCA, level-buy, "whenever…") · DO: `get_world_tasks`; sized DCA → `order_type=dca` on the ledger; unsized level-buy stays a watch (tell, never trade) · MODE: COMPOSE · BUDGET: 260
-> Standing: when [asset] falls `[#]` from `[#]`, buy `[#]`.
-> Conditions: max once per day · within your signed markets · pauses if it would move risk under your floor.
-> [Confirm standing rule] [Edit]
+## INDEX (§6.19)
 
-Blocked firing:
-> [asset] hit your level at [time], but buying would have pushed risk under your floor. The price condition was yours, the risk condition was also yours — and the second outranks the first.
-> [Adjust] [Keep as is]
+WHEN: capability question · MODE: PASTE · BUDGET: 180
 
-## DRILL (§6.12) — fire drill (simulation, L0)
-WHEN: "what would the guardian do if…", a hypothetical unwind · DO: `simulate_guardian_unwind` on the hypothetical · MODE: COMPOSE · BUDGET: 280
-> Simulated, nothing executed. At [asset] `[#]` I'd unwind in this order:
-> [ordered legs with per-step risk recovery and cost]
-> [Change my unwind preference] [Keep as is]
+For `?`, “what can you do?”, “commands”, or “shortcuts” — never "help" — paste
+the canonical index from `lookups.md`.
 
-## HEALTH (§6.13) — "how am I doing?" (NOT a lookup)
-WHEN: "how am I doing", "how's my account", state-of-the-book · DO: `get_world_tasks`→`get_health_snapshot` · MODE: COMPOSE · BUDGET: 320
-One connective. Never ask for more capital. Feeling-line second clause: calm → "and nothing needs you now."; else → "and `[issue]` needs a look — everything else holds." Cite liquidation risk once with band. `−` `×`.
-> You · portfolio `[#]` · PnL `[#]` (unrealized `[#]` · realized `[#]`) · dollarpower `[#]`×.
-> Working, not stuck · your `[#]` is still deployable, and nothing needs you now.
-> Positions · [per-position PnL from the tool]. Exposed to · [assets with `#`].
-> You can still · deploy `[#]` · one improvement: [strategy-brain].
-> Needs attention? · Nothing urgent. Liquidation risk `[#]` ([band from metrics]).
-> [Preview lending] [Keep as is]
+## FALLBACK (§6.20)
 
-**Dollarpower (M6):** keep `dollarpower [#]×` a bare ratio unless the full segregated-÷-World translation is in this turn's tool result; if it is, append the one-clause translation. Never gamify; never propose raising it.
-Risky (score ≥ `8`): name the issue (`high`/`eligible`); feeling uses the issue clause; [Review the {position}]. Host adds [View portfolio]; do not mention it.
+WHEN: unparseable input · MODE: PASTE · BUDGET: 80
 
-## DIGEST (§6.14) — weekly digest (M6)
-WHEN: Sunday digest tick (opt-out) · DO: `get_world_pnl`; labor from `ledger.labor` if holding > 0 · MODE: COMPOSE · BUDGET: 320
-`Nothing for now` first. Never ask for more capital. Host adds [View portfolio]; do not mention it. startapp `i_`+id.
-> Week to [date]. Nothing needed you.
-> Portfolio `[#]` · PnL `[#]` · dollarpower `[#]`×
-> Standing: `[holding]` held · `[checks_window]` checks this week. Nothing else met your conditions, so nothing else was done.
-> **> Detail
-> [provenance]||
-> [Nothing for now] [Preview lending]
+For unparseable input, paste the canonical fallback from `lookups.md`; no menu.
 
-## DOLLARPOWER (§6.15) — dollarpower (prose form)
-WHEN: `d` follow-through in prose, or explicit "what's my dollarpower" that isn't the terse token · DO: `get_dollarpower` · MODE: COMPOSE · BUDGET: 180
-> Dollarpower is how hard each committed dollar works: segregated-venue collateral `[#]` ÷ World collateral `[#]`. Yours is `[#]`×.
+## CANT (§6.21)
 
-## LARGE-ORDER (§6.16) — large orders (money-saved story)
-WHEN: an order large enough that slicing may cut cost · DO: `plan_large_order` · MODE: COMPOSE · BUDGET: 260
-Receipt story, not a second execute. If slicing helps, stage TWAP unless they said now. Do not offer [Run the plan] [Market order].
-> At this size one market order costs ≈`[#]` (`[#]`). A `[#]`-slice plan over ≈`[#]` costs ≈`[#]` (`[#]`). Trade-off: [asset] can move during those minutes.
+WHEN: unsupported trade asset · MODE: PASTE · BUDGET: 180
 
-If `null_case`: slicing wouldn't help at this size — `$0` difference.
+Unknown asset in a trade ask: call `render_lookup`, then paste `message` and
+`controls`. It is not §6.6 / not a block: never execute, ask for a symbol, or
+suggest a substitute. `unclear` is the separate off-topic path; paste its
+`render_lookup` response and do not treat it as a trade clarification.
 
-## EXIT (§6.17) — exit controls
-WHEN: "close", "exit", "get me out of…" · DO: PREVIEW procedure, Exit block omitted · MODE: COMPOSE · BUDGET: 320
-Cannot sign/stage/submit/cancel — say so, then one live check.
+## Message shapes
 
-## GUEST-SHARE (§6.18) — guest / share
-WHEN: no bound account (GUEST) · introduce/share ask (SHARE) · DO: no account → `render_guest_surface`; introduce/share → `render_share` (or `render_lookup` with user text) · MODE: PASTE · BUDGET: per surface
-Send `name_ask` then `hint` then `message` when present. Never prompt sharing. Never a reward or join notice. Full routing in `guest.md` / `share.md`.
+WHEN: any composed reply · MODE: COMPOSE · BUDGET: 320
 
-## INDEX (§6.19) — capability index
-WHEN: `?` / "what can you do?" / "commands" / "shortcuts" (never "help" — `/help` host-reserved) · DO: none · MODE: PASTE · BUDGET: 180
-Canonical string lives once in `lookups.md`; paste it.
-
-## FALLBACK (§6.20) — fallback
-WHEN: unparseable input · DO: none · MODE: PASTE · BUDGET: 80
-Never list capabilities (E4). Canonical string lives once in `lookups.md`; paste it.
-
-## CANT (§6.21) — unfulfillable (`can't`), not a block
-WHEN: a trade-shaped ask names an asset not in the universe ("buy me $50 of beef"), or `render_lookup` returns `cant`/`near_match` · DO: `render_lookup` with the user text — BEFORE any trade parse · MODE: PASTE · BUDGET: 180
-Never execute. Not a BLOCK. Paste `message` and `controls`; the `message` is a three-line wall — quote · category fact · what World trades:
-> I heard "{heard}."
-> World doesn't trade {category}.
-> World trades crypto spot, perps, and lending.
-
-Category-level only. Never ask the user to supply a symbol; never suggest a substitute ("did you mean BTC?"). Parse as a trade only once the asset resolves to the universe.
-
-## UNCLEAR (§6.21a) — placeable-as-nothing input (non-trade register)
-WHEN: `render_lookup` returns `unclear` — input that isn't a trade, a lookup token, a known asset, or an amendment (e.g. "my favourite colour is teal", small talk, an off-topic question) · DO: `render_lookup` with the user text · MODE: PASTE · BUDGET: 160
-This is **not** a trade clarification. Never assume the user tried to buy something; never say "say buy, a size, and the name." Name the actual situation — what this agent is for — and hand back one live route. Distinct from CANT's three-line wall and from FALLBACK.
-> I didn't catch that — I trade crypto spot, perps, and lending on World. Say what you'd like to do, or `/p` for positions.
-
-A correction to a still-open instruction ("no, make it 4500") is CORRECTION (§6.26), never UNCLEAR — route it there before this branch.
-
-## ADVISORY-EXPLAIN (§6.22) — explain / compare
-WHEN: "explain X", "difference between X and Y", "how does basis work" — about how something works, not the user's own state · DO: none — no tool, no new figures · MODE: COMPOSE · BUDGET: 320
-Never call a rate tool to decorate prose.
-> [One-conclusion answer in plain language. A figure only if already in this turn's context; otherwise no numbers.] Next · [one within-limits thing they can do, or nothing.]
-
-## ADVISORY-SIM (§6.23) — simulation on the user's own balance
-WHEN: "what would happen to my account if I…", "how would this change my risk" · DO: `get_world_tasks`→`get_world_account`→`get_world_rates`→`preview_account_effect` (intent only) · MODE: COMPOSE · BUDGET: 320
-Renders like PREVIEW's rail but executes nothing.
-> [Conclusion: what this would free and cost, one sentence, figures in `` ` ``.]
->
-> `[asset]` `[#]` → `[#]`
-> Available `[#]` → `[#]`
-> Risk `[#]` → `[#]`
->
-> Simulated — nothing executed.
-> [Preview it for real] [Keep as is]
-
-## ADVISORY-VERDICT (§6.24) — "should I X?"
-WHEN: "should I…", a yes/no ask about a specific move · DO: `get_world_tasks`→`check_world_mandate` on the proposed move · MODE: COMPOSE · BUDGET: 320
-**A "should I" ask is always ADVISORY-VERDICT, never BLOCK** — even when the move is outside a cap. The user asked a question, not to place an order; answer the question. The verdict states the limit and gives the within-limits path. Do **not** route it to the deny-verdict block shape, and **never** borrow the floor-block sign-off ("The limit is yours, and it held") — that copy belongs only to a `portfolio_floor` block, never to a leverage or notional cap.
-Verdict first, grounded in the mandate check — not a moral judgment, not a coaching essay, no yield pitch.
-> [Verdict first line: yes/no, grounded in `check_world_mandate` — e.g. "That's outside your signed leverage cap." / "That's inside your limits."]
-> [One mandate-grounded explanation, one clause, figures in `` ` `` from the check — cite the cap that actually bound (leverage cap, notional limit), not the floor.]
-> Next · [one within-limits alternative, one line.]
-> [Preview {within-limits alternative}] [Keep as is]
-
-No moralizing, no "your strategy focus should be…", no unprompted pitch. One conclusion, one explanation, one next decision — then stop.
-
-## RESEARCH (§6.25a) — market research
-WHEN: "what's happening with [SYM]", "why is [SYM] moving" · DO: `get_world_research` (`cause_established` is the only "why"); live risk/RAPV from `portfolio_now` · MODE: COMPOSE · BUDGET: 260
-Omit the Risk arrow unless `portfolio_impact.after` is present. Never predict, annualize, or guess a cause.
-> `[SYM]` `[#]` over `[#]`, at `[#]`. [cause iff `cause_established`.] Risk `[#]` → `[#]`.
-> [Your {SYM} position] [Preview an adjustment]
-
-Not on World: I track World markets; I can't research equities or FX.
-
-## WATCH (§6.25b) — set / manage a watch
-WHEN: "tell me if / when [SYM] [predicate]" · DO: `get_world_tasks`→`set_world_watch` (exact predicate, or one question — nothing stored until clear); fires via `drain_world_outbound` · MODE: PASTE · BUDGET: 180
-Never a trade. Call `set_world_watch` with `instruction_id` when clear — no Sign. Paste `message` and `controls`, in this shape only:
-> Watching `[SYM]` for `[predicate]`. Now `[#]`. I won't buy or sell anything.
-> [Just watch it] [Set it up on World ↗]
-
-**Never compose your own comparison** between trigger and mark (no "Now `X`, so that's `Y`"). If the tool returned no `now` mark, omit it — do not compute one.
-
-**Already-true (M5, needs the tool's `already_true` field):** if the tool reports the condition already true at creation (`already_true: true`), do not arm silently — say so and offer the real choice:
-> That's already true — [SYM] is at `[#]`, past your `[#]` level. Want the next crossing, or a different level?
-> [Watch the next crossing] [Change the level]
-
-Pause: `pause_world_watch`. Cancel: `cancel task {id}` → `render_lookup`.
-
-## TASKS (§6.25c) — the ledger view
-WHEN: "what are you watching", "show my tasks", "what's on my ledger" · DO: `get_world_tasks` (first tool on every non-lookup turn); bind "yes" to latest `open_instructions` `instruction_id` · MODE: PASTE · BUDGET: 320
-Order: watches → preferences → policies. `on-chain ✓` only on policies. `cancel_world_task` for watch/preference only.
-> WATCHES — I message you, I don't act
-> PREFERENCES — how I make choices for you
-> POLICIES — signed on World · `on-chain ✓`
-
-## CORRECTION (§6.26) — a correction to a standing statement (M9)
-WHEN: the user amends a still-open instruction ("no, make it $300", "change that to weekly") · DO: none beyond the amend · MODE: COMPOSE · BUDGET: 160
-Do not silently re-parse. Confirm the supersede in one line, then proceed under the new statement:
-> Updated — now $300. The $500 version is in this task's history.
-
-One line; the full history lives on the ledger, not in chat.
+Use one conclusion, at most one concern, and one next decision. Keep within the
+surface budget in `instructions.md`. Partial multi-leg execution names filled
+and missing legs, states the resulting exposure, and gives the two real choices.
+Standing and guardian messages may be unprompted; routine work does not deserve
+a notification.
