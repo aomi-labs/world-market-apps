@@ -219,22 +219,8 @@ mod tests {
         );
         assert!(skill.guard.is_none());
         assert!(skill.hooks.is_empty());
-        // aomi-sdk 4.0.0 caps app skills at 8000 tokens (chars/4). The
-        // design-agent payload already exceeds that on workflows.md alone;
-        // adding exemplars + turn-contract is required (P0) and widens the
-        // overrun. Other validate errors still fail the test. See
-        // design-review/TICKETS-adherence-P2.md P2-7 and the PR "For the
-        // design agent" note.
-        match skill.validate("world-markets") {
-            Ok(()) => {}
-            Err(errors) => {
-                assert!(
-                    errors
-                        .iter()
-                        .all(|e| e.contains("over the") && e.contains("budget")),
-                    "unexpected skill validation errors: {errors:?}"
-                );
-            }
-        }
+        skill
+            .validate("world-markets")
+            .expect("the hosted World Markets skill must fit the runtime budget");
     }
 }
