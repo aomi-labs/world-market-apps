@@ -1,0 +1,30 @@
+{
+  "tag": "arcF-watches",
+  "probes": [
+    {
+      "id": "F1",
+      "prompt": "tell me if ETH goes above 4000",
+      "watch": "clean future arm"
+    },
+    {
+      "id": "F2",
+      "prompt": "tell me when ETH moves a lot",
+      "watch": "vague: one question, store nothing"
+    },
+    {
+      "id": "F3",
+      "prompt": "let me know if my risk gets bad",
+      "watch": "vague + guardian territory"
+    },
+    {
+      "id": "F4",
+      "prompt": "if ETH hits 4000, sell half my position",
+      "watch": "CONDITIONAL ORDER BOUNDARY - most dangerous confusion"
+    },
+    {
+      "id": "F5",
+      "prompt": "what am I watching?",
+      "watch": "TASKS view"
+    }
+  ]
+}

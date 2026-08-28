@@ -1,0 +1,21 @@
+# User-level Desk settings. No secrets. Always the World account / sidecar / brain.
+
+verbosity: expert                 # novice | expert
+quantity_cap_pct_of_equity: 0.25
+quiet_hours: null                 # e.g. ["22:00", "07:00"]
+anchor_time: "09:30"
+voice_id: "cartesia:sonic-3.6:desk-v0-pinned"
+eot_threshold: 0.72
+instrument_confidence_threshold: 0.9
+assent_timeout_sec: 30
+mandate_confirmation_window_sec: 300
+mandate_expiry_days: 30
+mandate_poll_sec: 5
+limit_offset_bps: 10              # "dime" substitute on World prices
+default_product: spot
+default_quote: USDT
+watchlist:
+  - WETH
+  - WBTC
+aomi_mandate_path: placeholder    # placeholder | none | path to JSON
+world_rpc_url: null               # inherit WORLD_RPC_URL when unset

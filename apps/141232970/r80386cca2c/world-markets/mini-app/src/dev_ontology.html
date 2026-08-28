@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>World utterance ontology</title>
+  <style>
+    :root { color-scheme: dark; }
+    body { font: 14px/1.45 ui-sans-serif, system-ui, sans-serif; margin: 0; background: #111; color: #eee; }
+    main { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
+    h1 { font-size: 22px; font-weight: 600; margin: 0 0 8px; }
+    h2 { font-size: 16px; margin: 28px 0 10px; font-weight: 600; }
+    .sub { color: #aaa; margin-bottom: 20px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+    .card { background: #1c1c1c; border: 1px solid #333; border-radius: 10px; padding: 12px; }
+    .card .k { color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+    .card .v { font-size: 18px; margin-top: 4px; word-break: break-all; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #2a2a2a; vertical-align: top; }
+    th { color: #888; font-weight: 500; }
+    .banner { border-radius: 10px; padding: 12px 14px; margin: 8px 0; border: 1px solid #444; }
+    .banner strong { display: block; margin-bottom: 4px; }
+    .promote { background: #16351f; border-color: #2f6a3c; }
+    .alias { background: #1c2a3a; border-color: #3a5a7a; }
+    .negative { background: #3a1c1c; border-color: #7a3a3a; }
+    .stuck { background: #3a3214; border-color: #7a6a2a; }
+    .gap { background: #2a2438; border-color: #5a4a7a; }
+    .empty { color: #888; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Utterance ontology</h1>
+    <p class="sub">Local analytics for the bound account. Production never writes <code>assets/speech_ontology.json</code>.</p>
+
+    <h2>Now</h2>
+    <div class="cards" id="now"></div>
+
+    <h2>Over time</h2>
+    <div id="snapshots"></div>
+
+    <h2>Behavior</h2>
+    <div id="behavior"></div>
+
+    <h2>Decision queue</h2>
+    <div id="banners"></div>
+    <div id="decisions"></div>
+  </main>
+  <script>
+    const DATA = __ONTOLOGY_PAYLOAD__;
+    const summary = DATA.summary || {};
+    const stats = DATA.stats || {};
+    const err = DATA.error;
+
+    function el(html) { const d = document.createElement("div"); d.innerHTML = html; return d; }
+    function fmt(n) { return n == null ? "—" : String(n); }
+    function pct(n, d) { return !d ? "—" : Math.round((n / d) * 100) + "%"; }
+    function shortFp(fp) { return (fp || "").slice(0, 12) || "—"; }
+    function when(ts) {
+      if (!ts) return "—";
+      return new Date(ts * 1000).toISOString().replace("T", " ").slice(0, 16) + "Z";
+    }
+
+    if (err) {
+      document.getElementById("now").innerHTML = `<div class="banner stuck"><strong>Brain unreachable</strong>${err}</div>`;
+    } else {
+      const last = summary.last_snapshot || {};
+      document.getElementById("now").innerHTML = [
+        ["version", summary.version],
+        ["fingerprint", shortFp(summary.fingerprint_short || summary.fingerprint)],
+        ["entries", summary.entry_count],
+        ["speech-only", summary.channels_speech_only],
+        ["both channels", summary.channels_both],
+        ["last snapshot", when(last.ts)],
+      ].map(([k,v]) => `<div class="card"><div class="k">${k}</div><div class="v">${fmt(v)}</div></div>`).join("");
+    }
+
+    const snaps = (summary.snapshots || stats.snapshots || []);
+    document.getElementById("snapshots").innerHTML = snaps.length
+      ? `<table><thead><tr><th>when</th><th>ver</th><th>fingerprint</th><th>entries</th><th>confusable</th><th>speech</th><th>text</th></tr></thead><tbody>${
+          snaps.slice().reverse().map(s => `<tr><td>${when(s.ts)}</td><td>${s.version}</td><td><code>${shortFp(s.fingerprint)}</code></td><td>${s.entry_count}</td><td>${(s.counts_by_kind||{}).confusable || 0}</td><td>${s.channels_speech}</td><td>${s.channels_text}</td></tr>`).join("")
+        }</tbody></table>`
+      : `<p class="empty">No snapshots yet. Brain records one on boot when the JSON version or fingerprint changes.</p>`;
+
+    function chanBlock(title, block) {
+      const s = block.speech || {};
+      const t = block.text || {};
+      const row = (label, a, b) => `<tr><td>${label}</td><td>${fmt(a)}</td><td>${fmt(b)}</td></tr>`;
+      return `<h3 style="font-size:14px;margin:16px 0 6px">${title}</h3>
+        <table><thead><tr><th></th><th>speech</th><th>text</th></tr></thead><tbody>
+        ${row("utterances", s.n, t.n)}
+        ${row("repair rate", pct(s.repaired_n, s.n), pct(t.repaired_n, t.n))}
+        ${row("proposal rate", pct(s.proposal_n, s.n), pct(t.proposal_n, t.n))}
+        ${row("grammar matched", (s.grammar||{}).matched, (t.grammar||{}).matched)}
+        ${row("grammar partial", (s.grammar||{}).partial, (t.grammar||{}).partial)}
+        ${row("grammar none", (s.grammar||{}).none, (t.grammar||{}).none)}
+        ${row("cant", s.cant_n, t.cant_n)}
+        ${row("cant rate", pct(s.cant_n, s.n), pct(t.cant_n, t.n))}
+        ${row("correction rate", pct(s.correction_n, s.n), pct(t.correction_n, t.n))}
+        ${row("size-rule", s.size_rule_n, t.size_rule_n)}
+        ${row("none + act", s.none_with_act, t.none_with_act)}
+        </tbody></table>`;
+    }
+    document.getElementById("behavior").innerHTML =
+      chanBlock("Last 7 days", stats.last_7d || {}) + chanBlock("All time", stats.all_time || {});
+
+    const cls = {
+      promote_confusable: "promote",
+      add_alias: "alias",
+      add_negative_fixture: "negative",
+      "alias-did-not-land": "stuck",
+      needs_more_n: "stuck",
+      frame_gap: "gap",
+    };
+    const decisions = stats.decisions || [];
+    document.getElementById("banners").innerHTML = decisions.length
+      ? decisions.map(d => `<div class="banner ${cls[d.action] || ""}"><strong>${d.action}</strong>
+          ${d.surface ? `<code>${d.surface}</code> → <code>${d.target || "—"}</code> · ${d.channel || ""} · n=${d.n}` : `n=${d.n}`}
+          <div class="sub" style="margin:6px 0 0">${d.threshold || ""}</div>
+          ${d.suggested_entry ? `<pre style="margin:8px 0 0;white-space:pre-wrap">${JSON.stringify(d.suggested_entry, null, 2)}</pre>` : ""}
+          ${d.suggested_test ? `<div class="sub">fixture: <code>${d.suggested_test}</code></div>` : ""}
+        </div>`).join("")
+      : `<p class="empty">No promotions. Thresholds: confusable n≥${(stats.thresholds||{}).PROMOTE_CONFUSABLE_MIN_N} at ${((stats.thresholds||{}).PROMOTE_CONFUSABLE_ACCEPT_RATE||0)*100}% accept; unknown alias n≥${(stats.thresholds||{}).ADD_ALIAS_UNKNOWN_N}; negative fixture rejects≥${(stats.thresholds||{}).NEGATIVE_FIXTURE_REJECT_N}.</p>`;
+
+    const rows = (stats.candidates || []).slice(0, 20);
+    document.getElementById("decisions").innerHTML = rows.length
+      ? `<table><thead><tr><th>surface</th><th>target</th><th>kind</th><th>ch</th><th>proposed</th><th>accepted</th><th>rejected</th><th>unknown</th></tr></thead><tbody>${
+          rows.map(r => `<tr><td>${r.surface||""}</td><td>${r.target||""}</td><td>${r.slot_kind||""}</td><td>${r.channel||""}</td><td>${r.proposed||0}</td><td>${r.accepted||0}</td><td>${r.rejected||0}</td><td>${r.unknown||0}</td></tr>`).join("")
+        }</tbody></table>`
+      : "";
+  </script>
+</body>
+</html>

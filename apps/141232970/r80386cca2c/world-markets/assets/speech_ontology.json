@@ -1,0 +1,177 @@
+{
+  "version": 3,
+  "entries": [
+    { "surface_form": "buy", "normalized_target": "buy", "kind": "act", "confidence": 1.0 },
+    { "surface_form": "sell", "normalized_target": "sell", "kind": "act", "confidence": 1.0 },
+    { "surface_form": "long", "normalized_target": "long", "kind": "act", "confidence": 1.0 },
+    { "surface_form": "short", "normalized_target": "short", "kind": "act", "confidence": 1.0 },
+    { "surface_form": "lend", "normalized_target": "lend", "kind": "act", "confidence": 1.0 },
+    { "surface_form": "borrow", "normalized_target": "borrow", "kind": "act", "confidence": 1.0 },
+    { "surface_form": "close", "normalized_target": "close", "kind": "act", "confidence": 1.0 },
+    { "surface_form": "cancel", "normalized_target": "cancel", "kind": "act", "confidence": 1.0 },
+    { "surface_form": "pause", "normalized_target": "pause", "kind": "act", "confidence": 1.0 },
+    { "surface_form": "resume", "normalized_target": "resume", "kind": "act", "confidence": 1.0 },
+    { "surface_form": "watch", "normalized_target": "watch", "kind": "act", "confidence": 1.0 },
+    { "surface_form": "open", "normalized_target": "open", "kind": "act", "confidence": 1.0 },
+    { "surface_form": "unwind", "normalized_target": "unwind", "kind": "act", "confidence": 1.0 },
+    { "surface_form": "leverage", "normalized_target": "leverage", "kind": "act", "confidence": 1.0 },
+    { "surface_form": "leverage up", "normalized_target": "leverage up", "kind": "act", "confidence": 1.0 },
+    { "surface_form": "leverage down", "normalized_target": "leverage down", "kind": "act", "confidence": 1.0 },
+
+    { "surface_form": "what", "normalized_target": "what", "kind": "opener", "confidence": 1.0 },
+    { "surface_form": "what's", "normalized_target": "what's", "kind": "opener", "confidence": 1.0 },
+    { "surface_form": "how", "normalized_target": "how", "kind": "opener", "confidence": 1.0 },
+    { "surface_form": "how much", "normalized_target": "how much", "kind": "opener", "confidence": 1.0 },
+    { "surface_form": "why", "normalized_target": "why", "kind": "opener", "confidence": 1.0 },
+    { "surface_form": "show", "normalized_target": "show", "kind": "opener", "confidence": 1.0 },
+    { "surface_form": "list", "normalized_target": "list", "kind": "opener", "confidence": 1.0 },
+
+    { "surface_form": "worth", "normalized_target": "worth", "kind": "size_frame", "confidence": 1.0 },
+    { "surface_form": "dollars", "normalized_target": "dollars", "kind": "size_frame", "confidence": 1.0 },
+    { "surface_form": "bucks", "normalized_target": "bucks", "kind": "size_frame", "confidence": 1.0 },
+    { "surface_form": "notional", "normalized_target": "notional", "kind": "size_frame", "confidence": 1.0 },
+
+    { "surface_form": "market", "normalized_target": "market", "kind": "order_type", "confidence": 1.0 },
+    { "surface_form": "limit", "normalized_target": "limit", "kind": "order_type", "confidence": 1.0 },
+    { "surface_form": "twap", "normalized_target": "twap", "kind": "order_type", "confidence": 1.0 },
+    { "surface_form": "TWAP", "normalized_target": "twap", "kind": "order_type", "confidence": 1.0 },
+    { "surface_form": "over time", "normalized_target": "twap", "kind": "order_type", "confidence": 1.0 },
+    { "surface_form": "in slices", "normalized_target": "twap", "kind": "order_type", "confidence": 1.0 },
+    { "surface_form": "dca", "normalized_target": "dca", "kind": "order_type", "confidence": 1.0 },
+    { "surface_form": "DCA", "normalized_target": "dca", "kind": "order_type", "confidence": 1.0 },
+    { "surface_form": "dollar cost average", "normalized_target": "dca", "kind": "order_type", "confidence": 1.0 },
+
+    { "surface_form": "ETH", "normalized_target": "WETH", "kind": "instrument", "confidence": 1.0 },
+    { "surface_form": "ether", "normalized_target": "WETH", "kind": "instrument", "confidence": 1.0 },
+    { "surface_form": "ethereum", "normalized_target": "WETH", "kind": "instrument", "confidence": 1.0 },
+    { "surface_form": "WETH", "normalized_target": "WETH", "kind": "instrument", "confidence": 1.0 },
+    { "surface_form": "wrapped ether", "normalized_target": "WETH", "kind": "instrument", "confidence": 1.0 },
+    { "surface_form": "wrapped eth", "normalized_target": "WETH", "kind": "instrument", "confidence": 1.0 },
+    { "surface_form": "wrapped ethereum", "normalized_target": "WETH", "kind": "instrument", "confidence": 1.0 },
+    { "surface_form": "BTC", "normalized_target": "WBTC", "kind": "instrument", "confidence": 1.0 },
+    { "surface_form": "bitcoin", "normalized_target": "WBTC", "kind": "instrument", "confidence": 1.0 },
+    { "surface_form": "WBTC", "normalized_target": "WBTC", "kind": "instrument", "confidence": 1.0 },
+    { "surface_form": "wrapped bitcoin", "normalized_target": "WBTC", "kind": "instrument", "confidence": 1.0 },
+    { "surface_form": "SOL", "normalized_target": "SOL", "kind": "instrument", "confidence": 1.0 },
+    { "surface_form": "solana", "normalized_target": "SOL", "kind": "instrument", "confidence": 1.0 },
+    { "surface_form": "USDC", "normalized_target": "USDC", "kind": "instrument", "confidence": 1.0 },
+    { "surface_form": "USD coin", "normalized_target": "USDC", "kind": "instrument", "confidence": 1.0 },
+    { "surface_form": "USDT", "normalized_target": "USDT", "kind": "instrument", "confidence": 1.0 },
+    { "surface_form": "tether", "normalized_target": "USDT", "kind": "instrument", "confidence": 1.0 },
+
+    { "surface_form": "percent", "normalized_target": "percent", "kind": "unit", "confidence": 1.0 },
+    { "surface_form": "tenth", "normalized_target": "tenth", "kind": "unit", "confidence": 1.0 },
+    { "surface_form": "tenths", "normalized_target": "tenths", "kind": "unit", "confidence": 1.0 },
+
+    { "surface_form": "fifty", "normalized_target": "fifty", "kind": "size", "confidence": 1.0 },
+    { "surface_form": "fifteen", "normalized_target": "fifteen", "kind": "size", "confidence": 1.0 },
+    { "surface_form": "hundred", "normalized_target": "hundred", "kind": "size", "confidence": 1.0 },
+    { "surface_form": "a hundred", "normalized_target": "a hundred", "kind": "size", "confidence": 1.0 },
+    { "surface_form": "two hundred", "normalized_target": "two hundred", "kind": "size", "confidence": 1.0 },
+    { "surface_form": "five hundred", "normalized_target": "five hundred", "kind": "size", "confidence": 1.0 },
+
+    { "surface_form": "spot", "normalized_target": "spot", "kind": "product", "confidence": 1.0 },
+    { "surface_form": "perp", "normalized_target": "perp", "kind": "product", "confidence": 1.0 },
+    { "surface_form": "perpetual", "normalized_target": "perpetual", "kind": "product", "confidence": 1.0 },
+    { "surface_form": "lending", "normalized_target": "lending", "kind": "product", "confidence": 1.0 },
+
+    { "surface_form": "beef", "normalized_target": "WETH", "kind": "confusable", "confidence": 1.0, "channels": ["speech"] },
+    { "surface_form": "these", "normalized_target": "WETH", "kind": "confusable", "confidence": 1.0, "channels": ["speech"] },
+    { "surface_form": "eath", "normalized_target": "WETH", "kind": "confusable", "confidence": 1.0, "channels": ["speech"] },
+    { "surface_form": "eeth", "normalized_target": "WETH", "kind": "confusable", "confidence": 1.0, "channels": ["speech"] },
+    { "surface_form": "eeths", "normalized_target": "WETH", "kind": "confusable", "confidence": 1.0, "channels": ["speech"] },
+    { "surface_form": "ease", "normalized_target": "WETH", "kind": "confusable", "confidence": 1.0, "channels": ["speech"] },
+    { "surface_form": "east", "normalized_target": "WETH", "kind": "confusable", "confidence": 1.0, "channels": ["speech"] },
+    { "surface_form": "it", "normalized_target": "WETH", "kind": "confusable", "confidence": 1.0, "channels": ["speech"] },
+    { "surface_form": "soul", "normalized_target": "SOL", "kind": "confusable", "confidence": 1.0, "channels": ["speech"] },
+    { "surface_form": "sawl", "normalized_target": "SOL", "kind": "confusable", "confidence": 1.0, "channels": ["speech"] },
+    { "surface_form": "bit coin", "normalized_target": "WBTC", "kind": "confusable", "confidence": 1.0, "channels": ["speech"] },
+    { "surface_form": "wrap btc", "normalized_target": "WBTC", "kind": "confusable", "confidence": 1.0, "channels": ["speech"] }
+  ],
+  "frames": [
+    {
+      "id": "dollars_worth_of",
+      "role": "instrument_slot",
+      "tokens": ["dollars", "worth", "of"],
+      "fuzzy": true
+    },
+    {
+      "id": "bucks_worth_of",
+      "role": "instrument_slot",
+      "tokens": ["bucks", "worth", "of"],
+      "fuzzy": true
+    },
+    {
+      "id": "worth_of",
+      "role": "instrument_slot",
+      "tokens": ["worth", "of"],
+      "fuzzy": true
+    },
+    {
+      "id": "dollars_of",
+      "role": "instrument_slot",
+      "tokens": ["dollars", "of"],
+      "fuzzy": true
+    },
+    {
+      "id": "bucks_of",
+      "role": "instrument_slot",
+      "tokens": ["bucks", "of"],
+      "fuzzy": true
+    },
+    {
+      "id": "act_instrument",
+      "role": "act_instrument",
+      "acts": ["buy", "sell", "long", "short", "lend", "borrow", "watch", "if", "close"],
+      "fuzzy_acts": ["buy", "sell"]
+    },
+    {
+      "id": "cancel_watches",
+      "role": "grammar",
+      "acts": ["cancel", "pause", "resume"],
+      "referents": ["watches", "tasks", "watch", "task", "these"],
+      "complete": "matched"
+    },
+    {
+      "id": "watch_level",
+      "role": "grammar",
+      "acts": ["watch", "if"],
+      "instrument": "required",
+      "level": "required",
+      "complete": "matched"
+    },
+    {
+      "id": "buy_sell",
+      "role": "grammar",
+      "acts": ["buy", "sell"],
+      "size": "optional",
+      "instrument": "required",
+      "complete": "matched"
+    },
+    {
+      "id": "side",
+      "role": "grammar",
+      "acts": ["long", "short", "lend", "borrow", "close"],
+      "open_prefix": true,
+      "instrument": "required",
+      "complete": "matched"
+    }
+  ],
+  "repairs": [
+    {
+      "id": "stt_550_fifty",
+      "kind": "size_mishear",
+      "surface": "550",
+      "target": "fifty",
+      "insert_before_worth": "dollars",
+      "require_acts": ["buy", "sell"],
+      "require_span": ["worth", "of"],
+      "channels": ["speech"]
+    }
+  ],
+  "gates": {
+    "confusable_pronouns": ["these", "this", "it"],
+    "control_acts": ["watch", "if", "cancel", "pause", "resume"],
+    "watch_referents": ["watches", "tasks", "watch", "task"]
+  }
+}

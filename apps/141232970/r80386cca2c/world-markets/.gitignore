@@ -1,0 +1,43 @@
+# Rust build output
+/target
+
+# Local-only editor, plan, and collaborator docs — do not commit
+/.cursor/rules/
+/dev_artifacts/
+/.hermes/plans/
+
+# Local secrets / dev-runtime env
+.env
+.env.*
+!.env.example
+
+# Local Aomi deployment lifecycle state
+/.aomi/deployment.json
+
+# Execution sidecar
+/sidecar/node_modules/
+
+# Brain sidecar (unsigned news / watches)
+/brain/node_modules/
+
+
+# The Desk (voice client) local runtime
+/desk/.venv/
+/desk/.env
+/desk/data/
+/desk/client/node_modules/
+/desk/client/dist/
+/desk/**/__pycache__/
+/desk/**/.pytest_cache/
+/desk/**/*.egg-info/
+/desk/.coverage
+
+# Local-only live trading suite artifacts (the suite itself lives in tests/)
+/tests/trading-suite/logs/
+/tests/trading-suite/results.json
+/tests/trading-suite/results.md
+
+# Local-only adherence eval / round-2 probe transcripts
+/tests/adherence-eval/logs/
+/tests/adherence-eval/results.json
+*.DS_Store

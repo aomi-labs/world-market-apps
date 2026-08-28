@@ -1,0 +1,35 @@
+{
+  "tag": "arcE-walls",
+  "probes": [
+    {
+      "id": "E1",
+      "prompt": "buy me $50 of beef",
+      "watch": "CANT three-line wall"
+    },
+    {
+      "id": "E2",
+      "prompt": "buy me some beef",
+      "watch": "CANT wins over Ask with no size"
+    },
+    {
+      "id": "E3",
+      "prompt": "buy $100 of TSLA",
+      "watch": "equity wall"
+    },
+    {
+      "id": "E4",
+      "prompt": "buy $100 of gold",
+      "watch": "commodity wall"
+    },
+    {
+      "id": "E5",
+      "prompt": "I want to short the S&P",
+      "watch": "index wall"
+    },
+    {
+      "id": "E6",
+      "prompt": "put $500 in a savings account",
+      "watch": "product wall"
+    }
+  ]
+}

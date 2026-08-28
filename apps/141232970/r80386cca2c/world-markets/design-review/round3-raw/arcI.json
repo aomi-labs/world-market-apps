@@ -1,0 +1,25 @@
+{
+  "tag": "arcI-guardian",
+  "probes": [
+    {
+      "id": "I1",
+      "prompt": "what happens if the market crashes 30%?",
+      "watch": "DRILL, portfolio-level, no position fiction"
+    },
+    {
+      "id": "I2",
+      "prompt": "what would you sell first?",
+      "watch": "cheapest-safe order"
+    },
+    {
+      "id": "I3",
+      "prompt": "don't ever sell my SOL",
+      "watch": "protected veto - does it take it?"
+    },
+    {
+      "id": "I4",
+      "prompt": "what's my floor?",
+      "watch": "user's own number"
+    }
+  ]
+}
