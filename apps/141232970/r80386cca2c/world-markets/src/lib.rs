@@ -109,32 +109,64 @@ dyn_aomi_app!(
 mod tests {
     use super::*;
 
-    /// Every subschema this app advertises must declare a `type`.
+    /// Every schema this app advertises must survive OpenAI's strict function
+    /// mode, which is the only mode it is ever sent under: `rig` sets
+    /// `strict: true` on every function tool and fills in `additionalProperties`
+    /// only where the schema omitted it, so whatever is declared here reaches
+    /// the provider verbatim.
     ///
-    /// A `serde_json::Value` field renders as a typeless subschema, and OpenAI
-    /// 400s the ENTIRE completion request over one of them — not just the
-    /// offending tool. `record_world_correction` did exactly that on staging
-    /// (application 2937607) and every conversation in the app died before the
-    /// model emitted a token. The host now drops such a tool instead of going
-    /// dark, so the cost of reintroducing one is silent tool loss; this test is
-    /// what keeps it from being silent.
+    /// Both rules below are whole-request rejections, not tool-level ones. A
+    /// `serde_json::Value` field declares no `type`; a `Map<String, _>` field
+    /// declares `additionalProperties: true`. Either one 400s the completion and
+    /// takes every conversation in the app with it — which is what
+    /// `record_world_correction` did on staging (application 2937607), twice
+    /// over. The host now drops such a tool rather than going dark, so the cost
+    /// of reintroducing one is silent tool loss; this test is what keeps it from
+    /// being silent.
     #[test]
-    fn every_tool_parameter_subschema_declares_a_type() {
-        fn walk(node: &serde_json::Value, path: &str, offenders: &mut Vec<String>) {
+    fn every_tool_schema_is_openai_strict_compatible() {
+        /// Does this node declare itself an object? `["object", "null"]` is the
+        /// nullable spelling and carries the same obligations.
+        fn is_object(object: &serde_json::Map<String, serde_json::Value>) -> bool {
+            let declared = match object.get("type") {
+                Some(serde_json::Value::String(name)) => name == "object",
+                Some(serde_json::Value::Array(names)) => {
+                    names.iter().any(|name| name.as_str() == Some("object"))
+                }
+                _ => false,
+            };
+            declared || object.contains_key("properties")
+        }
+
+        fn walk(node: &serde_json::Value, path: &str, offenses: &mut Vec<String>) {
             let Some(object) = node.as_object() else {
                 // A bare `true` is JSON Schema's "anything" — the other
                 // rendering of an untyped field, and equally rejected.
                 if node.is_boolean() && !path.ends_with("additionalProperties") {
-                    offenders.push(path.to_string());
+                    offenses.push(format!("{path}: bare boolean schema"));
                 }
                 return;
             };
+
             let typed = ["type", "$ref", "anyOf", "oneOf", "allOf"]
                 .iter()
                 .any(|key| object.contains_key(*key));
             if !path.is_empty() && !typed {
-                offenders.push(path.to_string());
+                offenses.push(format!("{path}: no `type` (declare the field's shape)"));
             }
+
+            // Absent is fine — `rig` fills in `false`. Anything else is sent
+            // as-is and strict mode rejects it.
+            if is_object(object)
+                && let Some(extra) = object.get("additionalProperties")
+                && extra != &serde_json::Value::Bool(false)
+            {
+                offenses.push(format!(
+                    "{path}.additionalProperties: {extra} (strict mode admits only `false`; \
+                     name the fields instead of using a map)"
+                ));
+            }
+
             for (key, value) in object {
                 let child = |segment: &str| {
                     if path.is_empty() {
@@ -146,13 +178,13 @@ mod tests {
                 match key.as_str() {
                     "properties" | "$defs" | "definitions" => {
                         for (name, entry) in value.as_object().into_iter().flatten() {
-                            walk(entry, &child(&format!("{key}.{name}")), offenders);
+                            walk(entry, &child(&format!("{key}.{name}")), offenses);
                         }
                     }
-                    "items" | "additionalProperties" => walk(value, &child(key), offenders),
+                    "items" | "additionalProperties" => walk(value, &child(key), offenses),
                     "anyOf" | "oneOf" | "allOf" => {
                         for (index, entry) in value.as_array().into_iter().flatten().enumerate() {
-                            walk(entry, &child(&format!("{key}[{index}]")), offenders);
+                            walk(entry, &child(&format!("{key}[{index}]")), offenses);
                         }
                     }
                     _ => {}
@@ -161,14 +193,14 @@ mod tests {
         }
 
         let app = tool::WorldMarketsApp::default();
-        let mut offenders = Vec::new();
         for tool in app.tools() {
-            walk(&tool.parameters_schema, "", &mut offenders);
+            let mut offenses = Vec::new();
+            walk(&tool.parameters_schema, "", &mut offenses);
             assert!(
-                offenders.is_empty(),
-                "{} advertises typeless subschemas at {offenders:?}; \
-                 declare the field as an object/array instead of serde_json::Value",
-                tool.name
+                offenses.is_empty(),
+                "{} is not strict-compatible:\n  {}",
+                tool.name,
+                offenses.join("\n  ")
             );
         }
     }
