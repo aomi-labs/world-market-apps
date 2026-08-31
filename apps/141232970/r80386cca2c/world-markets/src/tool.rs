@@ -2,7 +2,7 @@ use alloy_primitives::Address;
 use aomi_sdk::schemars::JsonSchema;
 use aomi_sdk::*;
 use rust_decimal::Decimal;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::str::FromStr;
 
@@ -3210,39 +3210,95 @@ impl DynAomiTool for DrainWorldOutbound {
 
 pub(crate) struct RecordWorldCorrection;
 
-/// Free-form JSON object. Declared as a map rather than `serde_json::Value`
-/// because a bare `Value` generates a subschema with no `type`, and OpenAI
-/// rejects the ENTIRE completion request over one such tool parameter — which
-/// took every world-markets conversation off the air until the host learned to
-/// drop the tool. A map still accepts arbitrary keys; it only states that the
-/// thing is an object, which every reader of these fields already assumes.
-type JsonObject = serde_json::Map<String, Value>;
+/// One side of a spoken repair: what the agent understood, or what the user
+/// actually meant.
+///
+/// Every field is named. A free-form object cannot be expressed here at all:
+/// `rig` sends every function tool with `strict: true`, and OpenAI's strict
+/// mode requires `additionalProperties: false` on each object — so an open map
+/// is rejected, and the rejection takes the whole completion request with it,
+/// not just this tool. `serde_json::Value` fails the same way one step earlier,
+/// by generating no `type`. These two are what the readers actually use:
+/// `symbol` here and in the brain's candidate-outcome scoring, `phrase` in the
+/// watch supersede below.
+#[derive(Debug, Clone, Default, Deserialize, Serialize, JsonSchema)]
+pub(crate) struct CorrectionIntent {
+    /// What the user was trying to do: buy, sell, lend, and so on.
+    #[serde(default)]
+    pub(crate) kind: Option<String>,
+    /// Instrument symbol the intent resolves to, such as BTC.b. Null when the
+    /// repair is not about an instrument.
+    #[serde(default)]
+    pub(crate) symbol: Option<String>,
+    /// The wording the user used for that instrument.
+    #[serde(default)]
+    pub(crate) phrase: Option<String>,
+}
+
+/// One confirmed lexicon entry. Named fields for the same reason as
+/// [`CorrectionIntent`]; these are the keys `applyLexicon` reads.
+///
+/// `applyLexicon` accepts `surface` / `target` as short aliases for the two
+/// canonical names. Those stay accepted here as serde aliases rather than as
+/// extra properties: strict mode makes every declared property required, so
+/// naming both spellings would put two synonym pairs in front of the model on
+/// every call. An alias costs nothing in the schema and still normalizes an
+/// aliased payload onto the canonical field — which is the spelling
+/// `applyLexicon` reads first.
+#[derive(Debug, Clone, Default, Deserialize, Serialize, JsonSchema)]
+pub(crate) struct LexiconRename {
+    /// What was said, verbatim.
+    #[serde(default, alias = "surface")]
+    pub(crate) surface_form: Option<String>,
+    /// What it means — usually an instrument symbol.
+    #[serde(default, alias = "target")]
+    pub(crate) normalized_target: Option<String>,
+    /// Entry kind; defaults to `phrase` when null.
+    #[serde(default)]
+    pub(crate) kind: Option<String>,
+}
 
 #[derive(Debug, Deserialize, JsonSchema)]
 pub(crate) struct RecordWorldCorrectionArgs {
     #[serde(default)]
     pub(crate) utterance_ref: Option<String>,
-    /// What the agent first understood, as an object. `symbol` names the
-    /// instrument it resolved to; other keys are stored verbatim.
+    /// What the agent first understood.
     #[serde(default)]
-    pub(crate) rejected_intent: Option<JsonObject>,
+    pub(crate) rejected_intent: Option<CorrectionIntent>,
     #[serde(default)]
     pub(crate) rejected_readback: Option<String>,
     #[serde(default)]
     pub(crate) correction_utterance_ref: Option<String>,
-    /// What the user actually meant, as an object. `symbol` names the
-    /// instrument, `phrase` the wording they used for it; other keys are stored
-    /// verbatim.
+    /// What the user actually meant.
     #[serde(default)]
-    pub(crate) accepted_intent: Option<JsonObject>,
+    pub(crate) accepted_intent: Option<CorrectionIntent>,
     #[serde(default)]
     pub(crate) accepted_readback: Option<String>,
-    /// One lexicon entry to confirm, as an object: `surface_form` (what was
-    /// said), `normalized_target` (what it means), and optionally `kind`.
+    /// One lexicon entry to confirm from this repair.
     #[serde(default)]
-    pub(crate) lexicon_rename: Option<JsonObject>,
+    pub(crate) lexicon_rename: Option<LexiconRename>,
     #[serde(default)]
     pub(crate) account_id: Option<u64>,
+}
+
+/// The `/v1/voice/correction` body, split out from `run` so the deserialize →
+/// forward boundary can be tested without a live brain.
+///
+/// The brain stores `rejected_intent` / `accepted_intent` verbatim and
+/// `exportEval` hands them back as training pairs, so any field dropped between
+/// the tool schema and here is lost for good — silently, since the row still
+/// looks well formed.
+fn correction_body(account_id: u64, args: &RecordWorldCorrectionArgs) -> Value {
+    json!({
+        "account_id": account_id,
+        "utterance_ref": args.utterance_ref,
+        "rejected_intent": args.rejected_intent,
+        "rejected_readback": args.rejected_readback,
+        "correction_utterance_ref": args.correction_utterance_ref,
+        "accepted_intent": args.accepted_intent,
+        "accepted_readback": args.accepted_readback,
+        "lexicon_rename": args.lexicon_rename,
+    })
 }
 
 impl DynAomiTool for RecordWorldCorrection {
@@ -3255,32 +3311,20 @@ impl DynAomiTool for RecordWorldCorrection {
         let account_id = WorldMarketsApp::account_id(&ctx, args.account_id).ok_or_else(|| {
             "[world-markets] account_id is required to record a correction".to_string()
         })?;
-        let result = app.brain.record_correction(&json!({
-            "account_id": account_id,
-            "utterance_ref": args.utterance_ref,
-            "rejected_intent": args.rejected_intent,
-            "rejected_readback": args.rejected_readback,
-            "correction_utterance_ref": args.correction_utterance_ref,
-            "accepted_intent": args.accepted_intent,
-            "accepted_readback": args.accepted_readback,
-            "lexicon_rename": args.lexicon_rename,
-        }))?;
+        let result = app
+            .brain
+            .record_correction(&correction_body(account_id, &args))?;
         let mut payload = json!({
             "source": "world-markets-brain",
             "executable": false,
             "result": result,
         });
         if let Some(intent) = args.accepted_intent.as_ref() {
-            if let Some(symbol) = intent.get("symbol").and_then(Value::as_str) {
+            if let Some(symbol) = intent.symbol.as_deref() {
                 let phrase = args
                     .accepted_readback
                     .clone()
-                    .or_else(|| {
-                        intent
-                            .get("phrase")
-                            .and_then(Value::as_str)
-                            .map(str::to_string)
-                    })
+                    .or_else(|| intent.phrase.clone())
                     .unwrap_or_default();
                 if let Ok(superseded) = app.brain.supersede_watch(&json!({
                     "account_id": account_id,
@@ -4344,5 +4388,75 @@ mod tests {
         assert_eq!(value["resize"]["rule"], "portfolio_floor");
         assert_eq!(value["resize"]["floor"]["value"], "6000");
         assert!(value["resize"]["largest_compliant_size"].is_null());
+    }
+
+    /// Nothing the brain stores or reads may be lost between the tool schema
+    /// and the `/v1/voice/correction` body.
+    ///
+    /// Strict mode forces a finite object, so every field has to be named
+    /// deliberately — and a field left out does not fail, it silently
+    /// disappears. `kind` is the one this caught: the brain persists the whole
+    /// intent and `exportEval` hands it back as a training pair (see
+    /// `brain/test/voice.test.js`, which builds its pair with
+    /// `{ kind: "buy", symbol: … }`), so dropping it would have quietly
+    /// degraded every correction recorded from then on.
+    #[test]
+    fn correction_body_preserves_every_field_the_brain_reads() {
+        let args: RecordWorldCorrectionArgs = serde_json::from_value(json!({
+            "utterance_ref": "utt-1",
+            "rejected_intent": { "kind": "buy", "symbol": "WBTC", "phrase": "wibbit" },
+            "rejected_readback": "buy wbtc",
+            "correction_utterance_ref": "utt-2",
+            "accepted_intent": { "kind": "buy", "symbol": "WETH", "phrase": "ether" },
+            "accepted_readback": "buy weth",
+            "lexicon_rename": {
+                "surface_form": "ether",
+                "normalized_target": "WETH",
+                "kind": "instrument"
+            },
+            "account_id": 22
+        }))
+        .expect("args deserialize");
+
+        let body = correction_body(22, &args);
+        assert_eq!(body["account_id"], json!(22));
+        assert_eq!(body["utterance_ref"], json!("utt-1"));
+        assert_eq!(body["rejected_readback"], json!("buy wbtc"));
+        assert_eq!(body["correction_utterance_ref"], json!("utt-2"));
+        assert_eq!(body["accepted_readback"], json!("buy weth"));
+        // `applyLexicon` reads all three; `exportEval` re-exports both intents
+        // whole, so every key that went in must come back out.
+        assert_eq!(
+            body["rejected_intent"],
+            json!({ "kind": "buy", "symbol": "WBTC", "phrase": "wibbit" })
+        );
+        assert_eq!(
+            body["accepted_intent"],
+            json!({ "kind": "buy", "symbol": "WETH", "phrase": "ether" })
+        );
+        assert_eq!(
+            body["lexicon_rename"],
+            json!({
+                "surface_form": "ether",
+                "normalized_target": "WETH",
+                "kind": "instrument"
+            })
+        );
+    }
+
+    /// `applyLexicon` falls back to `surface` / `target`, so a payload using
+    /// the short spelling must still reach the lexicon. It normalizes onto the
+    /// canonical field rather than being carried through, because that is the
+    /// spelling `applyLexicon` reads first.
+    #[test]
+    fn correction_body_normalizes_short_lexicon_aliases() {
+        let args: RecordWorldCorrectionArgs = serde_json::from_value(json!({
+            "lexicon_rename": { "surface": "ether", "target": "WETH" }
+        }))
+        .expect("aliased args deserialize");
+
+        let body = correction_body(22, &args);
+        assert_eq!(body["lexicon_rename"]["surface_form"], json!("ether"));
+        assert_eq!(body["lexicon_rename"]["normalized_target"], json!("WETH"));
     }
 }
