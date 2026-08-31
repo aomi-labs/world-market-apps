@@ -3210,22 +3210,37 @@ impl DynAomiTool for DrainWorldOutbound {
 
 pub(crate) struct RecordWorldCorrection;
 
+/// Free-form JSON object. Declared as a map rather than `serde_json::Value`
+/// because a bare `Value` generates a subschema with no `type`, and OpenAI
+/// rejects the ENTIRE completion request over one such tool parameter — which
+/// took every world-markets conversation off the air until the host learned to
+/// drop the tool. A map still accepts arbitrary keys; it only states that the
+/// thing is an object, which every reader of these fields already assumes.
+type JsonObject = serde_json::Map<String, Value>;
+
 #[derive(Debug, Deserialize, JsonSchema)]
 pub(crate) struct RecordWorldCorrectionArgs {
     #[serde(default)]
     pub(crate) utterance_ref: Option<String>,
+    /// What the agent first understood, as an object. `symbol` names the
+    /// instrument it resolved to; other keys are stored verbatim.
     #[serde(default)]
-    pub(crate) rejected_intent: Option<Value>,
+    pub(crate) rejected_intent: Option<JsonObject>,
     #[serde(default)]
     pub(crate) rejected_readback: Option<String>,
     #[serde(default)]
     pub(crate) correction_utterance_ref: Option<String>,
+    /// What the user actually meant, as an object. `symbol` names the
+    /// instrument, `phrase` the wording they used for it; other keys are stored
+    /// verbatim.
     #[serde(default)]
-    pub(crate) accepted_intent: Option<Value>,
+    pub(crate) accepted_intent: Option<JsonObject>,
     #[serde(default)]
     pub(crate) accepted_readback: Option<String>,
+    /// One lexicon entry to confirm, as an object: `surface_form` (what was
+    /// said), `normalized_target` (what it means), and optionally `kind`.
     #[serde(default)]
-    pub(crate) lexicon_rename: Option<Value>,
+    pub(crate) lexicon_rename: Option<JsonObject>,
     #[serde(default)]
     pub(crate) account_id: Option<u64>,
 }
