@@ -109,6 +109,70 @@ dyn_aomi_app!(
 mod tests {
     use super::*;
 
+    /// Every subschema this app advertises must declare a `type`.
+    ///
+    /// A `serde_json::Value` field renders as a typeless subschema, and OpenAI
+    /// 400s the ENTIRE completion request over one of them — not just the
+    /// offending tool. `record_world_correction` did exactly that on staging
+    /// (application 2937607) and every conversation in the app died before the
+    /// model emitted a token. The host now drops such a tool instead of going
+    /// dark, so the cost of reintroducing one is silent tool loss; this test is
+    /// what keeps it from being silent.
+    #[test]
+    fn every_tool_parameter_subschema_declares_a_type() {
+        fn walk(node: &serde_json::Value, path: &str, offenders: &mut Vec<String>) {
+            let Some(object) = node.as_object() else {
+                // A bare `true` is JSON Schema's "anything" — the other
+                // rendering of an untyped field, and equally rejected.
+                if node.is_boolean() && !path.ends_with("additionalProperties") {
+                    offenders.push(path.to_string());
+                }
+                return;
+            };
+            let typed = ["type", "$ref", "anyOf", "oneOf", "allOf"]
+                .iter()
+                .any(|key| object.contains_key(*key));
+            if !path.is_empty() && !typed {
+                offenders.push(path.to_string());
+            }
+            for (key, value) in object {
+                let child = |segment: &str| {
+                    if path.is_empty() {
+                        segment.to_string()
+                    } else {
+                        format!("{path}.{segment}")
+                    }
+                };
+                match key.as_str() {
+                    "properties" | "$defs" | "definitions" => {
+                        for (name, entry) in value.as_object().into_iter().flatten() {
+                            walk(entry, &child(&format!("{key}.{name}")), offenders);
+                        }
+                    }
+                    "items" | "additionalProperties" => walk(value, &child(key), offenders),
+                    "anyOf" | "oneOf" | "allOf" => {
+                        for (index, entry) in value.as_array().into_iter().flatten().enumerate() {
+                            walk(entry, &child(&format!("{key}[{index}]")), offenders);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+
+        let app = tool::WorldMarketsApp::default();
+        let mut offenders = Vec::new();
+        for tool in app.tools() {
+            walk(&tool.parameters_schema, "", &mut offenders);
+            assert!(
+                offenders.is_empty(),
+                "{} advertises typeless subschemas at {offenders:?}; \
+                 declare the field as an object/array instead of serde_json::Value",
+                tool.name
+            );
+        }
+    }
+
     #[test]
     fn composed_preamble_includes_lookup_rules() {
         let header = preamble::ROLE_HEADER_FOR_TEST;
