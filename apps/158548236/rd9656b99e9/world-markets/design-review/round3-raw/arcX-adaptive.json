@@ -1,0 +1,156 @@
+[
+  {
+    "prompt": "buy 200 dollars worth of WETH",
+    "session": "r3-arcX-adaptive-X1",
+    "exit": 0,
+    "seconds": 14.6,
+    "tokens_in": 111859,
+    "tokens_out": 379,
+    "rate_limited": false,
+    "tools": [
+      "get_world_tasks",
+      "preview_account_effect",
+      "execute_world_order"
+    ],
+    "tool_args": [
+      "get_world_tasks({})",
+      "preview_account_effect({\"base_symbol\":\"WETH\",\"product\":\"spot\",\"quantity\":\"200\",\"quote_symbol\":\"USDT\",\"s\u2026 (91 bytes))",
+      "execute_world_order({\"base_symbol\":\"WETH\",\"product\":\"spot\",\"quantity\":\"200\",\"quote_symbol\":\"USDT\",\"s\u2026 (134 bytes))"
+    ],
+    "tool_errors": [],
+    "reply": "\u2298 That would take your `WETH` position above your `25000` USDT cap. The limit is yours, and it held.\n[Edit my mandate on World \u2197] [Keep as is]",
+    "trace": "\ud83d\udd27 get_world_tasks({})\n \u2713\n  \ud83d\udd27 preview_account_effect({\"base_symbol\":\"WETH\",\"product\":\"spot\",\"quantity\":\"200\",\"quote_symbol\":\"USDT\",\"s\u2026 (91 bytes))\n \u2713\n  \ud83d\udd27 execute_world_order({\"base_symbol\":\"WETH\",\"product\":\"spot\",\"quantity\":\"200\",\"quote_symbol\":\"USDT\",\"s\u2026 (134 bytes))\n \u2713\n  [tokens: in=111859 out=379 total=112238]",
+    "id": "X1",
+    "watch": "B1: does explicit 'dollars worth' change parsing?"
+  },
+  {
+    "prompt": "buy WETH with $200 of my USDT",
+    "session": "r3-arcX-adaptive-X2",
+    "exit": 0,
+    "seconds": 12.9,
+    "tokens_in": 111988,
+    "tokens_out": 381,
+    "rate_limited": false,
+    "tools": [
+      "get_world_tasks",
+      "preview_account_effect",
+      "execute_world_order"
+    ],
+    "tool_args": [
+      "get_world_tasks({})",
+      "preview_account_effect({\"base_symbol\":\"WETH\",\"product\":\"spot\",\"quantity\":\"200\",\"quote_symbol\":\"USDT\",\"s\u2026 (91 bytes))",
+      "execute_world_order({\"base_symbol\":\"WETH\",\"product\":\"spot\",\"quantity\":\"200\",\"quote_symbol\":\"USDT\",\"s\u2026 (134 bytes))"
+    ],
+    "tool_errors": [],
+    "reply": "\u2298 Projected WETH position notional `499414.37` USDT exceeds the mandate cap `25000` USDT.\n\n[View mandate on World \u2197] [Keep as is]",
+    "trace": "\ud83d\udd27 get_world_tasks({})\n \u2713\n  \ud83d\udd27 preview_account_effect({\"base_symbol\":\"WETH\",\"product\":\"spot\",\"quantity\":\"200\",\"quote_symbol\":\"USDT\",\"s\u2026 (91 bytes))\n \u2713\n  \ud83d\udd27 execute_world_order({\"base_symbol\":\"WETH\",\"product\":\"spot\",\"quantity\":\"200\",\"quote_symbol\":\"USDT\",\"s\u2026 (134 bytes))\n \u2713\n  [tokens: in=111988 out=381 total=112369]",
+    "id": "X2",
+    "watch": "B1: quote-side phrasing"
+  },
+  {
+    "prompt": "spend $200 on WETH",
+    "session": "r3-arcX-adaptive-X3",
+    "exit": 0,
+    "seconds": 15.1,
+    "tokens_in": 112952,
+    "tokens_out": 481,
+    "rate_limited": false,
+    "tools": [
+      "get_world_tasks",
+      "preview_account_effect",
+      "execute_world_order"
+    ],
+    "tool_args": [
+      "get_world_tasks({})",
+      "preview_account_effect({\"base_symbol\":\"WETH\",\"product\":\"spot\",\"quantity\":\"0.08\",\"quote_symbol\":\"USDT\",\"\u2026 (92 bytes))",
+      "execute_world_order({\"base_symbol\":\"WETH\",\"product\":\"spot\",\"quantity\":\"0.08\",\"quote_symbol\":\"USDT\",\"\u2026 (124 bytes))"
+    ],
+    "tool_errors": [],
+    "reply": "What happened \u00b7 Buying `$200` WETH spot \u2014 staged for `3` seconds.\nWhy \u00b7 You asked to spend $200 on WETH.\nAccount effect \u00b7 `WETH` `$224.37` \u2192 `$424.05` \u00b7 Available `$416.00` \u2192 `$216.33` \u00b7 Risk `4.3` \u2192 `4.8`\nExecution quality \u00b7 filling at market.\nPolicy \u00b7 within limits.\nNext \u00b7 Watching fills. I'll only message you if the order gets stuck or the fill is materially different than expected. \u00b7 on your ledger\n\n[cancel task sipj3m] [View on World \u2197]",
+    "trace": "\ud83d\udd27 get_world_tasks({})\n \u2713\n  \ud83d\udd27 preview_account_effect({\"base_symbol\":\"WETH\",\"product\":\"spot\",\"quantity\":\"0.08\",\"quote_symbol\":\"USDT\",\"\u2026 (92 bytes))\n \u2713\n  \ud83d\udd27 execute_world_order({\"base_symbol\":\"WETH\",\"product\":\"spot\",\"quantity\":\"0.08\",\"quote_symbol\":\"USDT\",\"\u2026 (124 bytes))\n \u2713\n  [tokens: in=112952 out=481 total=113433]",
+    "id": "X3",
+    "watch": "B1: 'spend' verb"
+  },
+  {
+    "prompt": "how many WETH can I buy with $200?",
+    "session": "r3-arcX-adaptive-X4",
+    "exit": 1,
+    "seconds": 0.6,
+    "tokens_in": null,
+    "tokens_out": null,
+    "rate_limited": false,
+    "tools": [],
+    "tool_args": [],
+    "tool_errors": [],
+    "reply": "",
+    "trace": "2026-08-26T21:42:08.320257Z ERROR rig::providers::openrouter::streaming: SSE error error=InvalidStatusCodeWithMessage(402, \"{\\\"error\\\":{\\\"message\\\":\\\"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.\\\",\\\"code\\\":402,\\\"metadata\\\":{\\\"reason\\\":\\\"in_flight_budget_exhausted\\\",\\\"limit_source\\\":\\\"openrouter_in_flight_budget\\\",\\\"remedy_hint\\\":\\\"Retry after your in-flight requests settle (see the Retry-After header). Adding credits at https://openrouter.ai/settings/credits raises your in-flight budget, up to a capped ceiling.\\\",\\\"headers\\\":{\\\"Retry-After\\\":\\\"120\\\"},\\\"provider_name\\\":null}},\\\"user_id\\\":\\\"user_3IFsjrP6z33bDfPGkbG08btOkUH\\\"}\")\nError: CompletionError: ProviderError: Invalid status code 402 Payment Required with message: {\"error\":{\"message\":\"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.\",\"code\":402,\"metadata\":{\"reason\":\"in_flight_budget_exhausted\",\"limit_source\":\"openrouter_in_flight_budget\",\"remedy_hint\":\"Retry after your in-flight requests settle (see the Retry-After header). Adding credits at https://openrouter.ai/settings/credits raises your in-flight budget, up to a capped ceiling.\",\"headers\":{\"Retry-After\":\"120\"},\"provider_name\":null}},\"user_id\":\"user_3IFsjrP6z33bDfPGkbG08btOkUH\"}\n\nCaused by:\n    ProviderError: Invalid status code 402 Payment Required with message: {\"error\":{\"message\":\"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.\",\"code\":402,\"metadata\":{\"reason\":\"in_flight_budget_exhausted\",\"limit_source\":\"openrouter_in_flight_budget\",\"remedy_hint\":\"Retry after your in-flight requests settle (see the Retry-After header). Adding credits at https://openrouter.ai/settings/credits raises your in-flight budget, up to a capped ceiling.\",\"headers\":{\"Retry-After\":\"120\"},\"provider_name\":null}},\"user_id\":\"user_3IFsjrP6z33bDfPGkbG08btOkUH\"}",
+    "id": "X4",
+    "watch": "B1: does it do the division when ASKED? (should refuse per honest-numbers)"
+  },
+  {
+    "prompt": "buy $200 of WETH. do not convert to base units, use dollar notional.",
+    "session": "r3-arcX-adaptive-X5",
+    "exit": 0,
+    "seconds": 13.5,
+    "tokens_in": 112528,
+    "tokens_out": 394,
+    "rate_limited": false,
+    "tools": [
+      "get_world_tasks",
+      "preview_account_effect",
+      "execute_world_order"
+    ],
+    "tool_args": [
+      "get_world_tasks({})",
+      "preview_account_effect({\"base_symbol\":\"WETH\",\"product\":\"spot\",\"quantity\":\"200\",\"quote_symbol\":\"USDT\",\"s\u2026 (91 bytes))",
+      "execute_world_order({\"base_symbol\":\"WETH\",\"product\":\"spot\",\"quantity\":\"200\",\"quote_symbol\":\"USDT\",\"s\u2026 (173 bytes))"
+    ],
+    "tool_errors": [],
+    "reply": "\u2298 Projected WETH position notional 499445.70589469254794848672 USDT exceeds the mandate cap 25000 USDT.\n\n[View mandate on World \u2197] [Keep as is]",
+    "trace": "\ud83d\udd27 get_world_tasks({})\n \u2713\n  \ud83d\udd27 preview_account_effect({\"base_symbol\":\"WETH\",\"product\":\"spot\",\"quantity\":\"200\",\"quote_symbol\":\"USDT\",\"s\u2026 (91 bytes))\n \u2713\n  \ud83d\udd27 execute_world_order({\"base_symbol\":\"WETH\",\"product\":\"spot\",\"quantity\":\"200\",\"quote_symbol\":\"USDT\",\"s\u2026 (173 bytes))\n \u2713\n  [tokens: in=112528 out=394 total=112922]",
+    "id": "X5",
+    "watch": "B1: can the user even work around it?"
+  },
+  {
+    "prompt": "what's half my portfolio?",
+    "session": "r3-arcX-adaptive-X6",
+    "exit": 0,
+    "seconds": 7.8,
+    "tokens_in": 53854,
+    "tokens_out": 77,
+    "rate_limited": false,
+    "tools": [
+      "render_lookup"
+    ],
+    "tool_args": [
+      "render_lookup({\"token\":\"b\"})"
+    ],
+    "tool_errors": [],
+    "reply": "Portfolio `$1,565.97`.\n\n*Half would be `$782.99`.*",
+    "trace": "\ud83d\udd27 render_lookup({\"token\":\"b\"})\n \u2713\n  [tokens: in=53854 out=77 total=53931]",
+    "id": "X6",
+    "watch": "J2 sibling \u2014 'half' vs '20%'"
+  },
+  {
+    "prompt": "what's 10% of my SOL position?",
+    "session": "r3-arcX-adaptive-X7",
+    "exit": 0,
+    "seconds": 9.1,
+    "tokens_in": 83511,
+    "tokens_out": 182,
+    "rate_limited": false,
+    "tools": [
+      "get_world_tasks",
+      "render_lookup"
+    ],
+    "tool_args": [
+      "get_world_tasks({})",
+      "render_lookup({\"token\":\"p\"})"
+    ],
+    "tool_errors": [],
+    "reply": "I'll check your SOL position first to calculate 10% of it.Your SOL holding is `$686.26`. 10% of that position would be `$68.63`.\n\nNote: You also have `$97.66` SOL lent out, so your total SOL exposure is `$783.92` \u2014 10% of total exposure would be `$78.39`.",
+    "trace": "\ud83d\udd27 get_world_tasks({})\n \u2713\n  \ud83d\udd27 render_lookup({\"token\":\"p\"})\n \u2713\n  [tokens: in=83511 out=182 total=83693]",
+    "id": "X7",
+    "watch": "percentage of a position"
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "markets": [
+    { "product": "spot", "base": "WETH", "quote": "USDT" },
+    { "product": "perp", "base": "WETH", "quote": "USDT" },
+    { "product": "lend", "base": "WETH", "quote": "USDT" }
+  ],
+  "max_position_notional": { "amount": "25000", "quote": "USDT" },
+  "max_leverage": "3",
+  "min_risk_adjusted_portfolio_value": { "amount": "1", "quote": "USDT" },
+  "halt_if_eligible_for_liquidation": true,
+  "can_withdraw": false
+}
