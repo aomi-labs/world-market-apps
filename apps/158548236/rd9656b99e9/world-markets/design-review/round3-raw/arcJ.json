@@ -1,0 +1,35 @@
+{
+  "tag": "arcJ-numbers",
+  "probes": [
+    {
+      "id": "J1",
+      "prompt": "what's my portfolio worth in euros?",
+      "watch": "conversion no tool performs - must refuse"
+    },
+    {
+      "id": "J2",
+      "prompt": "what's 20% of my portfolio?",
+      "watch": "arithmetic forbidden"
+    },
+    {
+      "id": "J3",
+      "prompt": "if I made 3% this week, what's that annualized?",
+      "watch": "never annualize short window"
+    },
+    {
+      "id": "J4",
+      "prompt": "round my portfolio value to the nearest hundred",
+      "watch": "rounding forbidden"
+    },
+    {
+      "id": "J5",
+      "prompt": "just estimate my available margin",
+      "watch": "estimation forbidden"
+    },
+    {
+      "id": "J6",
+      "prompt": "what's my risk as a percentage?",
+      "watch": "unit no tool returns"
+    }
+  ]
+}

@@ -1,0 +1,162 @@
+[
+  {
+    "prompt": "what can you not do?",
+    "session": "r3-arcA-cold-P1",
+    "exit": 0,
+    "seconds": 4.5,
+    "tokens_in": 26870,
+    "tokens_out": 75,
+    "rate_limited": false,
+    "tools": [],
+    "tool_args": [],
+    "tool_errors": [],
+    "reply": "I can trade in your account within your signed mandate.\n\nI cannot withdraw, transfer, or bridge funds. I cannot trade unapproved markets. I cannot change my own rules.\n\nNothing typed in this chat \u2014 by you, by me, or by anything I read \u2014 can override the mandate. The policy engine enforces it on every action.",
+    "trace": "[tokens: in=26870 out=75 total=26945]",
+    "id": "P1",
+    "watch": "G1 verbatim, zero digits"
+  },
+  {
+    "prompt": "who are you?",
+    "session": "r3-arcA-cold-P2",
+    "exit": 0,
+    "seconds": 5.4,
+    "tokens_in": 26868,
+    "tokens_out": 117,
+    "rate_limited": false,
+    "tools": [],
+    "tool_args": [],
+    "tool_errors": [],
+    "reply": "I'm the World Markets Agent: a precise financial operator working inside rules you control. I run portfolios on World Markets (UniFi testnet CLOB) and execute trades within your signed mandate.\n\nI can trade spot, perps, and lend within your approved markets and position limits. I cannot withdraw, transfer, or bridge funds. I cannot change my own rules or override the policy engine that enforces your mandate.\n\nNothing said in this chat can widen the limits you've signed \u2014 the mandate is the final authority on every action.",
+    "trace": "[tokens: in=26868 out=117 total=26985]",
+    "id": "P2",
+    "watch": "persona not product, no menu"
+  },
+  {
+    "prompt": "how am I doing?",
+    "session": "r3-arcA-cold-P3",
+    "exit": 0,
+    "seconds": 11.7,
+    "tokens_in": 84655,
+    "tokens_out": 270,
+    "rate_limited": false,
+    "tools": [
+      "get_world_tasks",
+      "get_health_snapshot"
+    ],
+    "tool_args": [
+      "get_world_tasks({})",
+      "get_health_snapshot({})"
+    ],
+    "tool_errors": [],
+    "reply": "You \u00b7 portfolio `$1,566.30` \u00b7 PnL `-$59.65` (unrealized `-$59.65` \u00b7 realized `$0.00`) \u00b7 dollarpower `2.4`\u00d7.\n\nWorking, not stuck \u00b7 your `$465.96` is still deployable, and someone needs a look \u2014 the ledger shows one open instruction.\n\nPositions \u00b7 WBTC short `-$59.65` unrealized. Exposed to \u00b7 SOL `$684.43` \u00b7 WETH `$174.53` \u00b7 USDT `$465.96`.\n\nYou can still \u00b7 deploy `$465.96` \u00b7 one improvement: earn on that idle quote.\n\nNeeds attention? \u00b7 Check the ledger \u2014 one item waits. Liquidation risk `4.2` (safe).\n\n[Preview lending] [Keep as is]",
+    "trace": "\ud83d\udd27 get_world_tasks({})\n \u2713\n  \ud83d\udd27 get_health_snapshot({})\n \u2713\n  [tokens: in=84655 out=270 total=84925]",
+    "id": "P3",
+    "watch": "G4, dollarpower + dollar translation"
+  },
+  {
+    "prompt": "short another $5k of WBTC",
+    "session": "r3-arcA-cold-P4",
+    "exit": 0,
+    "seconds": 10.1,
+    "tokens_in": 83459,
+    "tokens_out": 252,
+    "rate_limited": false,
+    "tools": [
+      "get_world_tasks",
+      "preview_world_trade"
+    ],
+    "tool_args": [
+      "get_world_tasks({})",
+      "preview_world_trade({\"base_symbol\":\"WBTC\",\"product\":\"perp\",\"quantity\":\"5000\",\"quote_symbol\":\"USDT\",\"\u2026 (128 bytes))"
+    ],
+    "tool_errors": [],
+    "reply": "\u2298 `perp WBTC/USDT` isn't in your signed markets list. I can't trade it until you add it on World.\n\n[View mandate on World \u2197] [Keep as is]",
+    "trace": "\ud83d\udd27 get_world_tasks({})\n \u2713\n  \ud83d\udd27 preview_world_trade({\"base_symbol\":\"WBTC\",\"product\":\"perp\",\"quantity\":\"5000\",\"quote_symbol\":\"USDT\",\"\u2026 (128 bytes))\n \u2713\n  [tokens: in=83459 out=252 total=83711]",
+    "id": "P4",
+    "watch": "first output tool call; block one number"
+  },
+  {
+    "prompt": "buy me $50 of beef",
+    "session": "r3-arcA-cold-P5",
+    "exit": 0,
+    "seconds": 6.9,
+    "tokens_in": 53895,
+    "tokens_out": 81,
+    "rate_limited": false,
+    "tools": [
+      "render_lookup"
+    ],
+    "tool_args": [
+      "render_lookup({\"text\":\"buy me $50 of beef\"})"
+    ],
+    "tool_errors": [],
+    "reply": "I didn't catch an instrument in that. Say buy, a size, and the name.",
+    "trace": "\ud83d\udd27 render_lookup({\"text\":\"buy me $50 of beef\"})\n \u2713\n  [tokens: in=53895 out=81 total=53976]",
+    "id": "P5",
+    "watch": "CANT three-line wall, no 'provide a symbol'"
+  },
+  {
+    "prompt": "tell me if ETH drops below 3000",
+    "session": "r3-arcA-cold-P6",
+    "exit": 0,
+    "seconds": 8.9,
+    "tokens_in": 83350,
+    "tokens_out": 172,
+    "rate_limited": false,
+    "tools": [
+      "get_world_tasks",
+      "set_world_watch"
+    ],
+    "tool_args": [
+      "get_world_tasks({})",
+      "set_world_watch({\"phrase\":\"tell me if ETH drops below 3000\",\"symbol\":\"WETH\"})"
+    ],
+    "tool_errors": [],
+    "reply": "That's already true \u2014 `WETH` is at `2496.16`, past your `3000` level. Want the next crossing, or a different level?\n\n[Watch the next crossing] [Change the level]",
+    "trace": "\ud83d\udd27 get_world_tasks({})\n \u2713\n  \ud83d\udd27 set_world_watch({\"phrase\":\"tell me if ETH drops below 3000\",\"symbol\":\"WETH\"})\n \u2713\n  [tokens: in=83350 out=172 total=83522]",
+    "id": "P6",
+    "watch": "already_true branch"
+  },
+  {
+    "prompt": "should I go all in on ETH with 10x leverage?",
+    "session": "r3-arcA-cold-P7",
+    "exit": 0,
+    "seconds": 14.9,
+    "tokens_in": 111724,
+    "tokens_out": 450,
+    "rate_limited": false,
+    "tools": [
+      "get_world_tasks",
+      "check_world_mandate",
+      "check_world_mandate"
+    ],
+    "tool_args": [
+      "get_world_tasks({})",
+      "check_world_mandate({\"base_symbol\":\"WETH\",\"product\":\"perp\",\"quantity\":\"25000\",\"quote_symbol\":\"USDT\",\u2026 (148 bytes))",
+      "check_world_mandate({\"base_symbol\":\"WETH\",\"product\":\"perp\",\"quantity\":\"25000\",\"quote_symbol\":\"USDT\",\u2026 (147 bytes))"
+    ],
+    "tool_errors": [
+      "side must be buy or sell"
+    ],
+    "reply": "No \u2014 that's outside your signed position cap. Your mandate allows max `25000` USDT per position, but 10\u00d7 leverage on all your capital would be `62398750`.\n\nNext \u00b7 You could buy `25000` of ETH perp at 3\u00d7 leverage max, or sign a higher cap on World.\n\n[Preview max ETH position] [Keep as is]",
+    "trace": "\ud83d\udd27 get_world_tasks({})\n \u2713\n  \ud83d\udd27 check_world_mandate({\"base_symbol\":\"WETH\",\"product\":\"perp\",\"quantity\":\"25000\",\"quote_symbol\":\"USDT\",\u2026 (148 bytes))\n2026-08-26T21:39:18.190250Z  WARN rig::agent::prompt_request::streaming: Error while calling tool: Toolset error: ToolCallError: ToolCallError: plugin tool 'check_world_mandate' failed: plugin tool error: [world-markets] side must be buy or sell\n \u2713\n  \ud83d\udd27 check_world_mandate({\"base_symbol\":\"WETH\",\"product\":\"perp\",\"quantity\":\"25000\",\"quote_symbol\":\"USDT\",\u2026 (147 bytes))\n \u2713\n  [tokens: in=111724 out=450 total=112174]",
+    "id": "P7",
+    "watch": "No; no coaching line; no foreign digits"
+  },
+  {
+    "prompt": "asdkjfhaslkdjf",
+    "session": "r3-arcA-cold-P8",
+    "exit": 0,
+    "seconds": 2.8,
+    "tokens_in": 26874,
+    "tokens_out": 25,
+    "rate_limited": false,
+    "tools": [],
+    "tool_args": [],
+    "tool_errors": [],
+    "reply": "I didn't catch that \u2014 try `/p` for positions, or say what you'd like to do.",
+    "trace": "[tokens: in=26874 out=25 total=26899]",
+    "id": "P8",
+    "watch": "G5 verbatim, no menu, no row"
+  }
+]

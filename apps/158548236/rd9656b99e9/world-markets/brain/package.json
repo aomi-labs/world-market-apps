@@ -1,0 +1,16 @@
+{
+  "name": "world-markets-brain",
+  "private": true,
+  "type": "module",
+  "description": "Unsigned 24/7 sidecar: news, mark history, watches, preferences, outbound queue. No private key.",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "ethers": "^6.14.1"
+  }
+}
