@@ -14,7 +14,6 @@
 //! Question answers are a GET projection: `GET /api/v1/mini-app/answer/{id}`.
 //! Introduction prepare is `POST /api/v1/mini-app/share` (not `/ledger*`; it
 //! mutates nothing the Mini App displays).
-//! Compose `kind: flush_execute` is a server-side backup after the 3s trade delay.
 //!
 //! Init-data HMAC follows Telegram's WebApp algorithm (HMAC-SHA256 keyed by
 //! `WebAppData`, then HMAC of the sorted data-check string). The Mini App spec's
@@ -100,7 +99,6 @@ async fn main() {
         desk_token: std::env::var("DESK_BRIDGE_TOKEN").unwrap_or_default(),
     };
 
-    let flush_account = state.account_id;
     let app = Router::new()
         .route("/api/v1/mini-app/auth", post(auth_handler))
         .route("/api/v1/mini-app/portfolio", get(portfolio_handler))
@@ -132,17 +130,6 @@ async fn main() {
     let bind = std::env::var("MINI_APP_BIND").unwrap_or_else(|_| "127.0.0.1:8080".to_string());
     let addr: SocketAddr = bind.parse().expect("MINI_APP_BIND must be host:port");
     tracing::info!("mini app listening on {addr}");
-    if let Some(account_id) = flush_account {
-        tokio::spawn(async move {
-            let mut ticker = tokio::time::interval(Duration::from_secs(5));
-            loop {
-                ticker.tick().await;
-                let _ =
-                    spawn_blocking(move || world_markets::mini_app::flush_due_trades(account_id))
-                        .await;
-            }
-        });
-    }
     let listener = tokio::net::TcpListener::bind(addr)
         .await
         .expect("bind mini-app port");
@@ -495,14 +482,6 @@ async fn compose_handler(
         "context_ref": body.context_ref,
     });
     match spawn_blocking(move || -> Result<Value, String> {
-        if kind == "flush_execute" {
-            let instruction_id = payload
-                .get("instruction_id")
-                .and_then(Value::as_str)
-                .filter(|id| !id.is_empty())
-                .ok_or_else(|| "instruction_id required".to_string())?;
-            return world_markets::mini_app::flush_staged_trade(account_id, instruction_id);
-        }
         let mut message = payload
             .get("message")
             .and_then(Value::as_str)
@@ -542,7 +521,7 @@ async fn compose_handler(
         }
         if !matches!(
             kind.as_str(),
-            "question" | "pause" | "resume" | "cancel" | "flush_execute" | "archive"
+            "question" | "pause" | "resume" | "cancel" | "archive"
         ) && !message.is_empty()
         {
             if let Some(handled) =
@@ -618,10 +597,7 @@ async fn compose_handler(
             }
         } else if chat_id.is_none()
             && value.get("recorded") == Some(&json!(true))
-            && !matches!(
-                kind.as_str(),
-                "cancel" | "archive" | "flush_execute" | "question"
-            )
+            && !matches!(kind.as_str(), "cancel" | "archive" | "question")
         {
             let sentence = value
                 .pointer("/instruction/sentence")
@@ -1086,9 +1062,9 @@ fn prompt_with_ir(text: &str, ir: Option<&Value>) -> String {
 }
 
 /// Local Mini App (`preview=dev`, no Telegram user): feed the transcript to
-/// `aomi-run --prompt` so the plugin can `execute_world_order` on the same
-/// rails as chat. The sidecar signs with `WORLD_PRIVATE_KEY`. Returns false
-/// when the agent binary, plugin, or an LLM key is missing.
+/// `aomi-run --prompt` so the plugin prepares and commits through Aomi's
+/// canonical Action and AA rails. Returns false when the agent binary, plugin,
+/// or an LLM key is missing.
 fn dispatch_local_agent_turn(transcript: &str) -> bool {
     let transcript = transcript.trim();
     if transcript.is_empty() {

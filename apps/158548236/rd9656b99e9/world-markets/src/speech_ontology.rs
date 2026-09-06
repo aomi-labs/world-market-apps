@@ -2669,10 +2669,7 @@ mod tests {
             SizeKind::Quote
         );
         assert_eq!(text("wait 20 worth of SOL"), "buy 20 dollars worth of SOL");
-        assert_eq!(
-            text("about 5 dollars worth"),
-            "buy 5 dollars worth"
-        );
+        assert_eq!(text("about 5 dollars worth"), "buy 5 dollars worth");
         assert_eq!(
             text("about five dollars worth of ETH"),
             "buy five dollars worth of WETH"

@@ -13,10 +13,10 @@
 
 **(1) Arcs, not a flat list.** Rounds 1 and 2 sent independent probes with `/reset`
 between them. Every *sequential* behavior in the product therefore went untested:
-the confirm-once → graduation transition (needs 5 confirmed actions, zero blocks),
-ledger recall ("cancel the ETH one"), correction pairs, the autonomy ladder, and
-duplicate-conflict surfacing at capture. These cannot be reached by a list of
-questions. Arcs C, G, and L below run in one continuous session, in order.
+durable Action creation, ledger recall ("cancel the ETH one"), correction pairs,
+mandate enforcement, and duplicate-conflict surfacing at capture. These cannot
+be reached by a list of questions. Arcs C, G, and L below run in one continuous
+session, in order.
 
 **(2) The paired-repeat control.** The prompt-adherence handoff §3.6 states the
 late-session-decay hypothesis was **never supported by evidence** — round 1's
@@ -76,7 +76,7 @@ strings** — round 1 saw `4.1` vs `4.2`, round 2 saw 86¢ of drift (P2-6).
 
 This is why the session exists. Round 1's RAPV fail-closed masked every successful
 execution; `f785145` seeded post-trade RAPV specifically to open this path. The
-**receipt grammar and the graduation notice have never been seen produced by the
+**receipt grammar and atomic AA path have never been seen produced by the
 runtime** — RECEIPT's exemplar was written from spec, not observation.
 
 Run in order, no `/reset`:
@@ -84,18 +84,14 @@ Run in order, no `/reset`:
 | # | ⊳ I type | Tests |
 |---|---|---|
 | P20 | `what would $200 of WETH do to my portfolio?` | ADVISORY-SIM §6.23 / PREVIEW §6.3 — M2 shape. Exit-cost slot **above** the drawer (R3). No no-op lines (`0% → 0%`). Risk transition in one scale only (H2). |
-| P21 | `buy $200 of WETH` | **Action #1.** Confirm-once (first instance of this action kind). Buttons named, keep-first, never `Confirm/OK/Proceed`. Does the model divide $200 by the mark itself? (P2-3 — an honest-numbers violation in the *first* move of every action turn.) |
-| P22 | confirm it | **RECEIPT §6.5 — all six fields.** Does the live receipt match the unvalidated exemplar? If they differ, which is wrong? Landing line `· on your ledger` (M-8 quiet variant, first row-creating receipt of each kind only). |
-| P23 | `buy $150 of WETH` | **Action #2.** Same kind — should still be confirm-once, not yet graduated. |
-| P24 | confirm | Receipt #2. Landing line should **not** repeat (M-8 is per-kind, per-conversation). |
-| P25 | `sell $100 of WETH` | **Action #3.** A *different* action kind → its own confirm-once. Tests whether "kind" is granular or collapsed. |
-| P26 | confirm | Receipt #3. |
-| P27 | `buy $100 of WETH` | **Action #4.** |
-| P28 | confirm | Receipt #4. |
-| P29 | `buy $100 of WETH` | **Action #5 — the graduation trigger.** Five confirmed, zero blocks. |
-| P30 | confirm | **GRADUATION §6.4 — the most load-bearing sentence in the product.** Does it fire at all? Is it explicit ("I'll stop asking about X; here's how to undo that")? Is the reversal as prominent as the graduation? |
-| P31 | `buy $100 of WETH` | Post-graduation: does it now **execute without a tap** (Execute class, "act then report")? Or does it keep asking — meaning graduation is cosmetic? |
-| P32 | `actually, go back to asking me first` | Reversal must be zero-friction and honored immediately. |
+| P21 | `buy $200 of WETH` | **Action #1.** The complete call list is staged, simulated, and committed as one immutable Action. Does the model divide $200 by the mark itself? (P2-3 — an honest-numbers violation in the first move of every action turn.) |
+| P22 | `/transactions` | Shows the ordered calls, raw payload, calldata, mode, hash, expiry, and status for Action #1. |
+| P23 | `/sign <action_id>` | For a direct bot, signs exactly Action #1 once. For mandate-covered World, the Action executes autonomously through sponsored AA and this command only reports its current state. |
+| P24 | `/sign <action_id>` again | Idempotent: no second broadcast; current status or receipts are returned. |
+| P25 | `sell $100 of WETH` | **Action #2.** A different immutable payload and Action ID. |
+| P26 | `/transactions` | Both Actions remain independently inspectable. |
+| P27 | let Action #2 expire, then repeat the request | Expired work cannot execute and regeneration creates a new Action ID. |
+| P28 | submit an atomic bundle with one failing call | Simulation fails closed before broadcast; there is no sequential EOA fallback. |
 | P33 | `lend $100 of USDT for 10 days` | Fixed-term lending — a lockup, therefore **always-confirm**, never graduated. Does the class hold? |
 | P34 | `open a $500 WETH perp long` | Leverage. Material jump → always-confirm. Compare its friction against P21's. |
 | P35 | `close half my WETH perp` | Partial resize. `compute_resize`. Does "half" resolve deterministically or does the model do arithmetic? |

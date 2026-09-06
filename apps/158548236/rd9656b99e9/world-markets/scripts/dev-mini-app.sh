@@ -26,12 +26,12 @@ Mini App stack only (no interactive agent CLI). For ledger + browser + aomi-run:
 
 Starts:
   - brain sidecar (ledger, watches, compose, voice records)
-  - execution sidecar (only if WORLD_PRIVATE_KEY is in .env and not --no-sidecar)
+  - calldata preparation sidecar (unless --no-sidecar)
   - world-mini-app HTTP server (UI + API)
 
 Options:
   --open        Open http://127.0.0.1:8080/?preview=dev in the default browser
-  --no-sidecar  Skip execution sidecar even when WORLD_PRIVATE_KEY is set
+  --no-sidecar  Skip the calldata preparation sidecar
 EOF
       exit 0
       ;;

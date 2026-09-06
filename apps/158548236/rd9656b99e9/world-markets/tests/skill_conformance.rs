@@ -271,10 +271,7 @@ fn required_controls_present() {
 #[test]
 fn load_bearing_strings_present() {
     let wf = skill("workflows.md");
-    // Graduation notice (§6.4).
-    assert!(wf.contains(
-        "Orders like this now execute automatically. Say `always ask` to keep confirmations."
-    ));
+    assert!(wf.contains("one `evm_commit_txs` for the complete ordered batch"));
     // Blocked standing-instruction message (§6.11) — the "second outranks the first".
     assert!(wf.contains("the second outranks the first"));
     // Receipt silence-conditions cue (§6.5).

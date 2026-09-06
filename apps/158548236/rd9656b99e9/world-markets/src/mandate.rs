@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{str::FromStr, time::UNIX_EPOCH};
 
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
@@ -8,6 +8,10 @@ use serde_json::Value;
 #[serde(deny_unknown_fields)]
 pub(crate) struct Mandate {
     pub(crate) version: u64,
+    /// Optional Unix deadline for the standing authority. Omission preserves
+    /// an explicitly non-expiring mandate; a present deadline fails closed.
+    #[serde(default)]
+    pub(crate) expires_at: Option<i64>,
     pub(crate) markets: Vec<MarketPermission>,
     pub(crate) max_position_notional: AmountLimit,
     pub(crate) max_leverage: String,
@@ -166,7 +170,7 @@ impl Mandate {
         let Some(value) = value else {
             return Err(mandate_absent("missing_mandate"));
         };
-        serde_json::from_value(value.clone()).map_err(|error| {
+        let mandate: Self = serde_json::from_value(value.clone()).map_err(|error| {
             let detail = error.to_string();
             let rule = if detail.contains("unknown field") {
                 "unknown_mandate_key"
@@ -174,7 +178,18 @@ impl Mandate {
                 "invalid_mandate"
             };
             mandate_absent(rule)
-        })
+        })?;
+        let now = UNIX_EPOCH
+            .elapsed()
+            .map(|elapsed| elapsed.as_secs() as i64)
+            .unwrap_or(i64::MAX);
+        if mandate.expires_at.is_some_and(|expiry| expiry <= now) {
+            return Err(Verdict::deny(
+                "expired_mandate",
+                "The signed World execution mandate has expired.",
+            ));
+        }
+        Ok(mandate)
     }
 
     pub(crate) fn evaluate(&self, facts: &TradeFacts<'_>) -> Verdict {
@@ -421,6 +436,22 @@ mod tests {
     #[test]
     fn allows_trade_inside_every_limit() {
         assert!(mandate().evaluate(&facts()).is_allow());
+    }
+
+    #[test]
+    fn expired_mandate_fails_before_execution() {
+        let verdict = Mandate::parse(Some(&json!({
+            "version": 1,
+            "expires_at": 1,
+            "markets": [{ "product": "perp", "base": "WETH", "quote": "USDT" }],
+            "max_position_notional": { "amount": "25000", "quote": "USDT" },
+            "max_leverage": "3",
+            "min_risk_adjusted_portfolio_value": { "amount": "5000", "quote": "USDT" },
+            "halt_if_eligible_for_liquidation": true,
+            "can_withdraw": false
+        })))
+        .unwrap_err();
+        assert_eq!(verdict.rule, "expired_mandate");
     }
 
     #[test]

@@ -34,7 +34,7 @@ Usage: scripts/dev-full.sh [options] [-- aomi-run args…]
 
 Starts everything for local end-to-end testing:
   - brain sidecar (ledger, watches, compose, voice records)
-  - execution sidecar (when WORLD_PRIVATE_KEY is in .env)
+  - calldata preparation sidecar
   - world-mini-app HTTP server (Mini App UI in the browser)
   - interactive aomi-run CLI in this terminal (agent chat thread)
 
@@ -44,7 +44,7 @@ Requires .env:
 Options:
   --open        Open portfolio + chart browser tabs (default)
   --no-open     Skip browser
-  --no-sidecar  Skip execution sidecar even when WORLD_PRIVATE_KEY is set
+  --no-sidecar  Skip the calldata preparation sidecar
   --no-cli      Services + browser only; no aomi-run REPL
 
 Examples:

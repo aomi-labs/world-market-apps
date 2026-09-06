@@ -1,16 +1,20 @@
 #!/usr/bin/env node
 /**
- * Local execution sidecar. Holds WORLD_PRIVATE_KEY, talks to UniFi via
- * @wcm-inc/sdk, and exposes a small HTTP API the Rust plugin calls.
- *
- * The plugin never sees the key. Hosted Aomi signing is a later swap of this
- * process for whatever service Aomi ends up running.
+ * World calldata preparation sidecar. It uses the venue SDK to construct exact
+ * calls, but deliberately cannot sign or broadcast them. Aomi's canonical EVM
+ * stage/simulate/commit pipeline is the only execution boundary.
  */
 import { createServer } from "node:http";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { JsonRpcProvider, Network, Wallet } from "ethers";
+import {
+  AbstractSigner,
+  JsonRpcProvider,
+  Network,
+  keccak256,
+  toUtf8Bytes,
+} from "ethers";
 import {
   Exchange,
   OrderType,
@@ -29,43 +33,94 @@ const EXCHANGE =
   process.env.WORLD_EXCHANGE_ADDRESS ||
   "0xf6b54e033bb45a583aa642924bcef78b804588ae";
 const DEFAULT_SLIPPAGE = Number(process.env.WORLD_EXECUTION_SLIPPAGE || 0.005);
-const PRIVATE_KEY = process.env.WORLD_PRIVATE_KEY;
-
-if (!PRIVATE_KEY) {
-  console.error(
-    "[execution-sidecar] WORLD_PRIVATE_KEY is required in .env for local signing",
-  );
-  process.exit(1);
-}
-
 const network = Network.from(CHAIN_ID);
 const provider = new JsonRpcProvider(RPC_URL, network, { staticNetwork: true });
-const wallet = new Wallet(PRIVATE_KEY, provider);
-const exchange = new Exchange({
-  contractAddress: EXCHANGE,
-  signer: { trader: wallet, owner: wallet },
-});
 
-const server = createServer((req, res) => {
-  handle(req, res).catch((error) => {
-    if (!res.headersSent) {
-      send(res, 500, { ok: false, error: publicError(error) });
-    }
+export class CaptureSigner extends AbstractSigner {
+  constructor(transactions, connectedProvider = provider) {
+    super(connectedProvider);
+    this.transactions = transactions;
+  }
+
+  connect(connectedProvider) {
+    return new CaptureSigner(this.transactions, connectedProvider);
+  }
+
+  async getAddress() {
+    return "0x0000000000000000000000000000000000000001";
+  }
+
+  async sendTransaction(request) {
+    const prepared = {
+      chain_id: CHAIN_ID,
+      to: String(await request.to),
+      value: (request.value ?? 0n).toString(),
+      data: request.data ?? "0x",
+      gas_limit: request.gasLimit?.toString(),
+      expires_at: Math.floor(Date.now() / 1000) + 60,
+      description: "World Markets operation",
+      kind: "world_markets",
+      protocol: "world-markets",
+    };
+    this.transactions.push(prepared);
+    const hash = keccak256(toUtf8Bytes(JSON.stringify(prepared)));
+    return {
+      hash,
+      wait: async () => ({ hash, blockNumber: null, status: 1 }),
+    };
+  }
+
+  async signTransaction() {
+    throw new Error("calldata preparer cannot sign transactions");
+  }
+
+  async signMessage() {
+    throw new Error("calldata preparer cannot sign messages");
+  }
+
+  async signTypedData() {
+    throw new Error("calldata preparer cannot sign typed data");
+  }
+}
+
+function preparation() {
+  const transactions = [];
+  const signer = new CaptureSigner(transactions);
+  return {
+    transactions,
+    exchange: new Exchange({
+      contractAddress: EXCHANGE,
+      signer: { trader: signer, owner: signer },
+    }),
+  };
+}
+
+export function startServer() {
+  const server = createServer((req, res) => {
+    handle(req, res).catch((error) => {
+      if (!res.headersSent) {
+        send(res, 500, { ok: false, error: publicError(error) });
+      }
+    });
   });
-});
+  server.listen(PORT, HOST, () => {
+    console.log(
+      `[execution-sidecar] ${HOST}:${PORT} mode=prepare_only chain=${CHAIN_ID}`,
+    );
+  });
+  return server;
+}
 
-server.listen(PORT, HOST, () => {
-  console.log(
-    `[execution-sidecar] ${HOST}:${PORT} signer=${wallet.address} chain=${CHAIN_ID}`,
-  );
-});
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  startServer();
+}
 
 async function handle(req, res) {
   const url = new URL(req.url || "/", `http://${HOST}`);
   if (req.method === "GET" && url.pathname === "/health") {
     send(res, 200, {
       ok: true,
-      signer: wallet.address,
+      mode: "prepare_only",
       chain_id: CHAIN_ID,
       exchange: EXCHANGE,
     });
@@ -78,27 +133,27 @@ async function handle(req, res) {
   const body = await readJson(req);
   try {
     if (url.pathname === "/v1/orders") {
-      send(res, 200, await placeOrder(body));
+      send(res, 200, await prepare(body, placeOrder));
       return;
     }
     if (url.pathname === "/v1/orders/cancel") {
-      send(res, 200, await cancelOrder(body));
+      send(res, 200, await prepare(body, cancelOrder));
       return;
     }
     if (url.pathname === "/v1/swaps") {
-      send(res, 200, await swap(body));
+      send(res, 200, await prepare(body, swap));
       return;
     }
     if (url.pathname === "/v1/loans/renew") {
-      send(res, 200, await renewLoans(body));
+      send(res, 200, await prepare(body, renewLoans));
       return;
     }
     if (url.pathname === "/v1/loans/pay-interest") {
-      send(res, 200, await payInterest(body));
+      send(res, 200, await prepare(body, payInterest));
       return;
     }
     if (url.pathname === "/v1/loans/close") {
-      send(res, 200, await closeLoans(body));
+      send(res, 200, await prepare(body, closeLoans));
       return;
     }
     send(res, 404, { ok: false, error: "not found" });
@@ -107,13 +162,33 @@ async function handle(req, res) {
   }
 }
 
-async function placeOrder(body) {
+async function prepare(body, build) {
+  const captured = preparation();
+  const detail = await build(body, captured.exchange);
+  if (captured.transactions.length === 0) {
+    throw new Error("venue SDK prepared no transaction");
+  }
+  return {
+    ok: true,
+    prepared: true,
+    atomic_required: true,
+    detail,
+    transactions: captured.transactions,
+    host_workflow: {
+      stage: "Call evm_stage_tx once for every transaction, in order, copying every field verbatim.",
+      simulate: "Call simulate_batch once with the complete ordered staged transaction list.",
+      commit: "Call evm_commit_txs once with that same complete ordered list. Never split or use EOA fallback.",
+    },
+  };
+}
+
+async function placeOrder(body, exchange) {
   const accountId = accountIdOf(body);
   const product = String(body.product || "").toLowerCase();
   const side = normalizeSide(product, body.side);
   const quantity = required(body.quantity, "quantity");
   const orderType = resolveOrderType(body);
-  const book = await orderBook(product, body);
+  const book = await orderBook(exchange, product, body);
   const price = await resolvePrice({
     product,
     side,
@@ -141,11 +216,11 @@ async function placeOrder(body) {
   });
 }
 
-async function cancelOrder(body) {
+async function cancelOrder(body, exchange) {
   const accountId = accountIdOf(body);
   const product = String(body.product || "").toLowerCase();
   const side = normalizeSide(product, body.side);
-  const book = await orderBook(product, body);
+  const book = await orderBook(exchange, product, body);
   let receipt;
   if (product === "lend") {
     const interestRate = quantizeLendRate(
@@ -176,7 +251,7 @@ async function cancelOrder(body) {
   return receiptJson(receipt, { product, side, order_id: orderId.toString() });
 }
 
-async function swap(body) {
+async function swap(body, exchange) {
   const router = process.env.WORLD_SWAP_ROUTER_ADDRESS;
   const helper = process.env.WORLD_PRICE_HELPER_ADDRESS;
   if (!router || !helper) {
@@ -208,7 +283,7 @@ async function swap(body) {
   });
 }
 
-async function renewLoans(body) {
+async function renewLoans(body, exchange) {
   const accountId = accountIdOf(body);
   const tokenIds = Array.isArray(body.token_ids) ? body.token_ids : [];
   if (tokenIds.length === 0) {
@@ -249,7 +324,7 @@ async function renewLoans(body) {
       attempted.push({
         position_id: position.positionId.toString(),
         token_id: String(tokenId),
-        transaction_hash: receipt.hash,
+        prepared_call_hash: receipt.hash,
       });
     }
   }
@@ -260,12 +335,12 @@ async function renewLoans(body) {
   };
 }
 
-async function payInterest(body) {
+async function payInterest(body, exchange) {
   const accountId = accountIdOf(body);
   const extendPeriod = Boolean(body.extend_period);
   const acted = [];
   const skipped = [];
-  for (const position of await borrowerPositions(body, accountId)) {
+  for (const position of await borrowerPositions(exchange, body, accountId)) {
     const receipt = await exchange.payInterestAndFees({
       positionId: position.positionId,
       extendPeriod,
@@ -273,7 +348,7 @@ async function payInterest(body) {
     acted.push({
       position_id: position.positionId.toString(),
       token_id: String(position.tokenId ?? body.token_id ?? ""),
-      transaction_hash: receipt.hash,
+      prepared_call_hash: receipt.hash,
     });
   }
   if (acted.length === 0 && skipped.length === 0) {
@@ -281,22 +356,22 @@ async function payInterest(body) {
   }
   return {
     ok: true,
-    transaction_hash: acted[0]?.transaction_hash ?? null,
+    prepared_call_hash: acted[0]?.prepared_call_hash ?? null,
     paid: acted,
     skipped,
   };
 }
 
-async function closeLoans(body) {
+async function closeLoans(body, exchange) {
   const accountId = accountIdOf(body);
   const acted = [];
-  for (const position of await borrowerPositions(body, accountId)) {
+  for (const position of await borrowerPositions(exchange, body, accountId)) {
     const receipt = await exchange.closeLoan({
       positionId: position.positionId,
     });
     acted.push({
       position_id: position.positionId.toString(),
-      transaction_hash: receipt.hash,
+      prepared_call_hash: receipt.hash,
     });
   }
   if (acted.length === 0) {
@@ -304,12 +379,12 @@ async function closeLoans(body) {
   }
   return {
     ok: true,
-    transaction_hash: acted[0]?.transaction_hash ?? null,
+    prepared_call_hash: acted[0]?.prepared_call_hash ?? null,
     closed: acted,
   };
 }
 
-async function borrowerPositions(body, accountId) {
+async function borrowerPositions(exchange, body, accountId) {
   const positionId = numericPositionId(body.position_id);
   if (positionId !== null) {
     return [{ positionId }];
@@ -371,7 +446,7 @@ async function submitPlace(book, product, side, order) {
   throw new Error(`unsupported product ${product}`);
 }
 
-async function orderBook(product, body) {
+async function orderBook(exchange, product, body) {
   const baseId = Number(required(body.base_token_id, "base_token_id"));
   if (product === "lend") {
     const book = await exchange.getLendOrderBook(baseId);
@@ -448,8 +523,7 @@ function numericPositionId(raw) {
 function receiptJson(receipt, extra = {}) {
   return {
     ok: true,
-    transaction_hash: receipt?.hash ?? null,
-    block_number: receipt?.blockNumber?.toString?.() ?? null,
+    prepared_call_hash: receipt?.hash ?? null,
     ...extra,
   };
 }

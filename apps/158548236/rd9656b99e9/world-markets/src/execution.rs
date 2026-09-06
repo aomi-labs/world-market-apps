@@ -1,8 +1,8 @@
-//! HTTP client for the local execution sidecar (`sidecar/`).
+//! HTTP client for the World calldata preparation sidecar (`sidecar/`).
 //!
-//! The plugin never holds a private key. Locally the sidecar signs with
-//! `WORLD_PRIVATE_KEY`. Later this module is the swap point for an Aomi-hosted
-//! signer: keep the request types, replace [`ExecutionClient`] internals.
+//! The sidecar has no signing material and never broadcasts. It translates
+//! venue-level intents into exact EVM calls which the app hands to Aomi's
+//! canonical stage/simulate/commit pipeline.
 
 use std::time::Duration;
 
@@ -156,7 +156,7 @@ impl ExecutionClient {
 
 fn sidecar_unreachable(url: &str, error: reqwest::Error) -> String {
     format!(
-        "[world-markets] execution sidecar is not reachable at {url} ({error}). Start it with scripts/dev-run.sh or `npm start` in sidecar/"
+        "[world-markets] calldata preparer is not reachable at {url} ({error}). Start it with scripts/dev-run.sh or `npm start` in sidecar/"
     )
 }
 

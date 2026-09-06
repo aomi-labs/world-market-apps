@@ -21,8 +21,9 @@ Production voice:
 
 ```
 Mini App 🎙 → POST /api/v1/mini-app/voice → STT → brain utterance
-            → sendData(transcript) → Aomi agent → execute_* (sidecar signs)
+            → sendData(transcript) → Aomi agent → execute_* (sidecar prepares calldata)
 ```
 
-Assent for orders is voice or text in the thread, not Cage `Done`, and not a
-Telegram Sign button.
+Assent for orders is voice or text in the thread, not Cage `Done`. Aomi seals
+the resulting transaction bundle as a durable Action and owns AA signing and
+broadcast.

@@ -515,7 +515,6 @@ pub(crate) fn render_receipt(
     cost: Option<&str>,
     policy: &str,
     next: &str,
-    graduation: Option<&str>,
     landing_ledger: bool,
 ) -> String {
     let mut lines = vec![
@@ -576,32 +575,12 @@ pub(crate) fn render_receipt(
     {
         lines.push(format!("One thing to flag: {}", effect.concern_line));
     }
-    if let Some(grad) = graduation.filter(|s| !s.is_empty()) {
-        lines.push(grad.to_string());
-    }
     lines.push("[View on World ↗] [Explain] [Preview exit]".to_string());
     lines.join("\n")
 }
 
-pub(crate) const GRADUATION_NOTICE: &str =
-    "Orders like this now execute automatically. Say `always ask` to keep confirmations.";
-
 /// UNCLEAR (§6.21a) — non-trade register. Never assumes the user tried to buy.
 pub(crate) const UNCLEAR_MESSAGE: &str = "I didn't catch that — I trade crypto spot, perps, and lending on World. Say what you'd like to do, or `/p` for positions.";
-
-/// CONFIRM-ONCE (§6.4a) opt-out read-back. Live figures; not a request for yes.
-pub(crate) fn render_confirm_once_readback(
-    resolved: &ResolvedSize,
-    asset: &str,
-    product: &str,
-) -> String {
-    let dollars = crate::lookups::format_money(resolved.notional, false);
-    let qty = crate::size::format_base_qty(resolved.base_qty);
-    let mark = crate::lookups::format_mark_human(resolved.mark);
-    format!(
-        "Staging `{dollars}` of {asset} {product} — `~{qty}` {asset} at `~{mark}`.\nSends in 3s if you don't cancel.\n[Cancel]"
-    )
-}
 
 /// RECEIPT / staged "What happened" — dollar size primary, ≤4-dp base qty parenthetical.
 pub(crate) fn render_size_happened(
@@ -1234,27 +1213,6 @@ mod tests {
     }
 
     #[test]
-    fn confirm_once_readback_has_live_figures_and_no_yes() {
-        let message = render_confirm_once_readback(&resolved_200_weth(), "WETH", "spot");
-        assert!(message.contains("$200"), "{message}");
-        assert!(message.contains("WETH"));
-        assert!(message.contains("spot"));
-        assert!(message.contains("~"));
-        assert!(message.contains("Sends in 3s if you don't cancel."));
-        assert!(message.contains("[Cancel]"));
-        let lower = message.to_ascii_lowercase();
-        assert!(!lower.contains("yes"));
-        assert!(!lower.contains("confirm to send"));
-        assert!(!lower.contains("say yes"));
-        let qty = message
-            .split('`')
-            .find(|t| t.starts_with('~') && t.chars().any(|c| c.is_ascii_digit()))
-            .unwrap_or("");
-        let frac = qty.trim_start_matches('~').split('.').nth(1).unwrap_or("");
-        assert!(frac.len() <= 6, "{qty}");
-    }
-
-    #[test]
     fn size_happened_keeps_quantity_at_most_four_dp_and_shows_dollars() {
         let staged = render_size_happened(&resolved_200_weth(), "WETH", "spot", None, true);
         assert!(staged.contains("$200"), "{staged}");
@@ -1277,11 +1235,9 @@ mod tests {
             None,
             "within limits.",
             "Watching the fill.",
-            Some(GRADUATION_NOTICE),
             true,
         );
         assert!(receipt.contains("$200"));
-        assert!(receipt.contains(GRADUATION_NOTICE));
         let qty_in_receipt = receipt
             .split('`')
             .find(|t| *t == "0.0799" || t.starts_with("0.07"))
