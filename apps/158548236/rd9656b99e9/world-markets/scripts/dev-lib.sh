@@ -144,12 +144,10 @@ dev_preflight_ports() {
 }
 
 dev_plan_sidecar() {
-  DEV_START_SIDECAR=0
+  DEV_START_SIDECAR=1
   if [[ "${DEV_SKIP_SIDECAR:-0}" -eq 1 ]]; then
+    DEV_START_SIDECAR=0
     return
-  fi
-  if [[ -n "$(dev_env_val WORLD_PRIVATE_KEY)" ]]; then
-    DEV_START_SIDECAR=1
   fi
 }
 
@@ -184,7 +182,7 @@ dev_wait_sidecars() {
   if [[ -n "${EXEC_PID:-}" ]]; then
     dev_wait_http "execution sidecar" "$EXEC_HEALTH_URL" "$EXEC_PID" "$EXEC_LOG" 75
   else
-    echo "execution sidecar skipped (no WORLD_PRIVATE_KEY or --no-sidecar)"
+    echo "calldata sidecar skipped (--no-sidecar)"
   fi
 }
 

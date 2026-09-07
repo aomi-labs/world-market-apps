@@ -44,11 +44,11 @@ so the message layer never authors a number; see `src/skill/` and the
 - `simulate_guardian_unwind`
 - `check_negative_carry`
 
-Version 0.4 is mandate-aware. Local `aomi-run` can place, cancel, swap, and
-extend loans through a Node sidecar (`sidecar/`) that holds `WORLD_PRIVATE_KEY`
-and calls `@wcm-inc/sdk`. Research, watches, and preferences go through a
-second unsigned sidecar (`brain/`) that holds no key. The Rust plugin never
-sees the key. Hosted Aomi signing is not in this release.
+Version 0.4 is mandate-aware. The Node sidecar (`sidecar/`) uses
+`@wcm-inc/sdk` only to prepare exact venue calldata. It has no key and cannot
+broadcast. The app returns those calls to Aomi's canonical stage, simulation,
+and atomic AA commit pipeline. Research, watches, and preferences go through a
+second unsigned sidecar (`brain/`).
 
 The mandate still fail-closes without a bound policy document. Post-trade RAPV is
 derived from ATLAS `evaluate` at unit risk, anchored to the live contract RAPV,
@@ -76,7 +76,7 @@ cargo build
 aomi-run target/debug/libworld_markets.dylib \
   --env-file .env --provider openrouter
 
-# plugin + local execution sidecar (requires WORLD_PRIVATE_KEY)
+# plugin + local calldata preparation sidecar
 chmod +x scripts/dev-run.sh
 ./scripts/dev-run.sh
 ```
@@ -140,8 +140,8 @@ chmod +x scripts/dev-full.sh
 ./scripts/dev-full.sh
 ```
 
-That one script starts brain, execution sidecar (when `WORLD_PRIVATE_KEY` is
-set), the mini-app server, opens portfolio + chart tabs, and runs **interactive
+That one script starts brain, the calldata sidecar, the mini-app server, opens
+portfolio + chart tabs, and runs **interactive
 `aomi-run`** in the terminal — the same agent thread you used before in the CLI.
 
 Mini App UI only (no agent REPL): `./scripts/dev-mini-app.sh --open`
@@ -153,7 +153,6 @@ Set in `.env` for browser dev:
 - `WORLD_ACCOUNT_ID` — account bound to portfolio/ledger views
 - `OPENROUTER_API_KEY` — required for `aomi-run`
 - `MINI_APP_DEV_BYPASS=1` — skip Telegram auth on localhost
-- `WORLD_PRIVATE_KEY` — optional; enables live trade flush via sidecar
 
 URLs after startup:
 

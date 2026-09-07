@@ -3,3 +3,4 @@ name = "world-markets"
 display_name = "World Markets Agent"
 platform = "world-market-apps"
 public = true
+handover = "wallet"

@@ -62,10 +62,6 @@ impl AccountWarmer {
         state.kick_inflight = false;
     }
 
-    pub(crate) fn clear_refresh(&self) {
-        self.lock().last_refresh = None;
-    }
-
     #[cfg(test)]
     pub(crate) fn never_refreshed(&self) -> bool {
         self.lock().last_refresh.is_none()
@@ -197,7 +193,5 @@ mod tests {
         assert!(warmer.never_refreshed());
         warmer.mark_refreshed(17);
         assert!(!warmer.never_refreshed());
-        warmer.clear_refresh();
-        assert!(warmer.never_refreshed());
     }
 }

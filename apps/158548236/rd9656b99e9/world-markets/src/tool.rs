@@ -279,13 +279,10 @@ pub(crate) struct ExecuteWorldOrderArgs {
     pub(crate) account_id: Option<u64>,
     #[serde(default)]
     pub(crate) wallet_address: Option<String>,
-    /// The user's whole utterance. Shown on the ledger during the cancel window.
+    /// The user's whole utterance, retained for intent provenance.
     #[serde(default)]
     pub(crate) sentence: Option<String>,
-    /// Per-order ledger binding for the staged/cancel/flush row of *this* order.
-    /// Not a per-kind authorization token. A model-supplied value must not skip
-    /// the 3s read-back; staging always keys cancel/flush to the instruction
-    /// `stage_trade` returns for this call.
+    /// Deprecated external ledger correlation, ignored by execution.
     #[serde(default)]
     #[allow(dead_code)]
     pub(crate) instruction_id: Option<String>,
@@ -420,7 +417,7 @@ impl WorldMarketsApp {
             .or_else(|| value_u64(ctx.attribute_path(&["handover_account_id"])))
             .or_else(|| value_u64(ctx.attribute_path(&["platform_account_ref"])))
             .or_else(|| value_u64(ctx.attribute_path(&["handover_account_ref"])))
-            .or_else(|| ctx.attribute_u64(&["handover_mandate", "account", "id"]))
+            .or_else(|| ctx.attribute_u64(&["handover", "mandate", "account", "id"]))
             // Final fallback: a session-persistent account id supplied via the
             // environment (WORLD_ACCOUNT_ID). Every runtime handover path above
             // wins over it, so a live handover is never overridden; this only
@@ -502,23 +499,10 @@ impl WorldMarketsApp {
         }));
     }
 
-    fn refresh_after_trade(
-        &self,
-        ctx: &DynToolCallCtx,
-        account_id: Option<u64>,
-        wallet_address: Option<&str>,
-    ) {
-        self.client.invalidate_volatile();
-        self.warmer.clear_refresh();
-        if let Ok((_, _, access)) = self.inspect_account(account_id, wallet_address, ctx) {
-            self.warmer.mark_refreshed(access.account_id);
-        }
-    }
-
     fn brief(ctx: &DynToolCallCtx) -> Option<Value> {
         ctx.attribute_path(&["handover_brief"])
             .or_else(|| ctx.attribute_path(&["brief"]))
-            .or_else(|| ctx.attribute_path(&["handover_mandate", "brief"]))
+            .or_else(|| ctx.attribute_path(&["handover", "mandate", "brief"]))
             .cloned()
     }
 
@@ -532,8 +516,15 @@ impl WorldMarketsApp {
         let account_id = Self::account_id(ctx, account_id);
         let owner_wallet = wallet_address
             .map(ToString::to_string)
+            .or_else(|| ctx.attribute_string(&["handover", "owner_address"]))
             .or_else(|| ctx.attribute_string(&["world", "owner_wallet"]));
-        let actor = ctx.attribute_string(&["domain", "evm", "address"]);
+        // World grants the OperatingAccount because that is the address which
+        // calls the venue under AA. The Para agent in domain.evm is only the
+        // OperatingAccount owner/signature authority and must never be treated
+        // as the venue trader.
+        let actor = ctx
+            .attribute_string(&["handover", "operating_address"])
+            .or_else(|| ctx.attribute_string(&["domain", "evm", "address"]));
         self.client
             .resolve_account(account_id, owner_wallet.as_deref(), actor.as_deref())
     }
@@ -859,7 +850,7 @@ impl WorldMarketsApp {
             .as_ref()
             .map(|p| p.rapv)
             .or_else(|| crate::liquidation_risk::dev_seed_rapv(&account));
-        let mandate = Mandate::bound(ctx.attribute_path(&["handover_mandate"]));
+        let mandate = Mandate::bound(ctx.attribute_path(&["handover", "mandate"]));
         let verdict = match mandate {
             Ok(mandate) => mandate.evaluate(&TradeFacts {
                 product,
@@ -884,7 +875,7 @@ impl WorldMarketsApp {
             "policy_denied"
         };
         let reason = if verdict.is_allow() {
-            "The deterministic mandate permits this intent. Submit with execute_world_order to send it through the local execution sidecar."
+            "The deterministic mandate permits this intent. Use execute_world_order to prepare calldata for Aomi's durable Action and AA execution path."
         } else {
             "The deterministic World mandate denied this intent; do not construct or stage a transaction."
         };
@@ -958,7 +949,7 @@ impl WorldMarketsApp {
             "risk_adjusted_portfolio_value",
         )
         .map_err(|verdict| format!("[world-markets] {}: {}", verdict.rule, verdict.detail))?;
-        let mandate = Mandate::bound(ctx.attribute_path(&["handover_mandate"]));
+        let mandate = Mandate::bound(ctx.attribute_path(&["handover", "mandate"]));
         let verdict = match mandate {
             Ok(mandate) => mandate.evaluate(&TradeFacts {
                 product: input.product,
@@ -985,7 +976,7 @@ impl WorldMarketsApp {
         ctx: &DynToolCallCtx,
     ) -> Result<(AccountAccess, Vec<u32>), String> {
         let access = self.access(account_id, wallet_address, ctx)?;
-        let mandate = Mandate::bound(ctx.attribute_path(&["handover_mandate"]))
+        let mandate = Mandate::bound(ctx.attribute_path(&["handover", "mandate"]))
             .map_err(|verdict| format!("[world-markets] {}: {}", verdict.rule, verdict.detail))?;
         let (_assets, account) = self.live_account(&access)?;
         let rapv = parse_decimal(
@@ -1204,7 +1195,7 @@ fn live_bound_account(ctx: &DynToolCallCtx) -> bool {
         || value_u64(ctx.attribute_path(&["platform_account_ref"])).is_some()
         || value_u64(ctx.attribute_path(&["handover_account_ref"])).is_some()
         || ctx
-            .attribute_u64(&["handover_mandate", "account", "id"])
+            .attribute_u64(&["handover", "mandate", "account", "id"])
             .is_some()
 }
 
@@ -1559,7 +1550,7 @@ impl DynAomiTool for ExecuteWorldOrder {
     type App = WorldMarketsApp;
     type Args = ExecuteWorldOrderArgs;
     const NAME: &'static str = "execute_world_order";
-    const DESCRIPTION: &'static str = "Stage a World spot, perp, or lend/borrow order on the ledger for a 3s cancel window, then fill through the local execution sidecar after the mandate allows. Pass the user's whole sentence. Pass size_usd when they named dollars; size_base when they named the asset. Order type is inferred when omitted. First instance of an action kind stages with a CONFIRM-ONCE read-back (Cancel only; sends if uncancelled). Never withdraws.";
+    const DESCRIPTION: &'static str = "Validate a World spot, perp, or lend/borrow order against live account state and the bound mandate, then prepare exact venue calldata. Pass the returned transactions verbatim through evm_stage_tx, simulate_batch, and one evm_commit_txs call. The preparer cannot sign or broadcast. Never withdraws.";
 
     fn run(
         app: &WorldMarketsApp,
@@ -1623,8 +1614,6 @@ impl DynAomiTool for ExecuteWorldOrder {
                 Some(resolved.notional),
             ));
         }
-        let kind = action_kind(product, &side);
-        let first_instance = !kind_is_confirmed(app, access.account_id, &kind);
         let opposite_depth = if product == "lend" {
             None
         } else {
@@ -1644,68 +1633,14 @@ impl DynAomiTool for ExecuteWorldOrder {
             interval_secs: args.interval_secs,
             cadence: args.cadence.as_deref(),
         });
-        let mut staged = args.clone();
-        staged.order_type = Some(plan.order_type.clone());
-        let mandate = ctx.attribute_path(&["handover_mandate"]).cloned();
-        let extra = json!({
-            "action_kind": kind,
-            "notional": resolved.notional.normalize().to_string(),
-            "mark": resolved.mark.normalize().to_string(),
-            "telegram_chat_id": telegram_chat_id(&ctx),
-            "size_usd": args.size_usd,
-            "size_base": args.size_base,
-        });
-        let result = crate::staged::stage_and_schedule(
-            &app.brain,
-            access.account_id,
-            &staged,
-            &sentence,
-            mandate.as_ref(),
-            &plan,
-            Some(&extra),
-        )?;
-        let instruction_id = result
-            .pointer("/instruction/instruction_id")
-            .and_then(Value::as_str)
-            .unwrap_or("")
-            .to_string();
-        let effect = preview_effect_for_receipt(app, &staged, &ctx, quantity).ok();
+        args.order_type = Some(plan.order_type.clone());
+        let effect = preview_effect_for_receipt(app, &args, &ctx, quantity).ok();
         let happened =
             crate::reporting::render_size_happened(&resolved, &base.symbol, product, None, true);
-        let message = if first_instance {
-            crate::reporting::render_confirm_once_readback(&resolved, &base.symbol, product)
-        } else {
-            crate::reporting::render_receipt(
-                &happened,
-                &format!("You asked to {sentence}."),
-                effect.as_ref(),
-                None,
-                None,
-                "within limits.",
-                "Watching the fill. I'll only message you if it fails.",
-                None,
-                false,
-            )
-        };
-        let controls = if first_instance {
-            json!([
-                { "label": "Cancel", "action": "cancel", "instruction_id": instruction_id }
-            ])
-        } else {
-            json!([
-                { "label": "View on World ↗", "action": "view" },
-                { "label": "Explain", "action": "explain" },
-                { "label": "Preview exit", "action": "preview_exit" }
-            ])
-        };
-        let mut payload = result;
+        let mut payload = place_world_order(app, args, ctx)?;
         if let Some(obj) = payload.as_object_mut() {
             obj.insert("resolved_size".into(), resolved.to_json());
-            obj.insert("message".into(), json!(message));
-            obj.insert("reply_verbatim".into(), json!(true));
-            obj.insert("controls".into(), controls);
-            obj.insert("needs_confirm".into(), json!(first_instance));
-            obj.insert("action_kind".into(), json!(kind));
+            obj.insert("happened".into(), json!(happened));
             if let Some(effect) = effect {
                 obj.insert("account_effect".into(), json!(effect));
             }
@@ -1873,28 +1808,6 @@ fn resolve_preview_qty(
     .map(|r| r.base_qty)
 }
 
-fn action_kind(product: &str, side: &str) -> String {
-    format!("{product}_{side}")
-}
-
-fn kind_is_confirmed(app: &WorldMarketsApp, account_id: u64, kind: &str) -> bool {
-    kind_confirmed_from_status(
-        &app.brain
-            .action_kind_status(account_id, kind)
-            .unwrap_or(json!({})),
-    )
-}
-
-fn kind_confirmed_from_status(status: &Value) -> bool {
-    status.get("confirmed").and_then(Value::as_bool) == Some(true)
-}
-
-fn telegram_chat_id(ctx: &DynToolCallCtx) -> Option<u64> {
-    ctx.attribute_u64(&["telegram", "chat", "id"])
-        .or_else(|| ctx.attribute_u64(&["telegram", "user", "id"]))
-        .or_else(|| ctx.attribute_u64(&["chat", "id"]))
-}
-
 fn preview_effect_for_receipt(
     app: &WorldMarketsApp,
     args: &ExecuteWorldOrderArgs,
@@ -2012,7 +1925,6 @@ pub(crate) fn place_world_order(
         order_type,
         slippage: args.slippage.clone(),
     })?;
-    app.refresh_after_trade(&ctx, args.account_id, args.wallet_address.as_deref());
     Ok(execution_ok(
         &access,
         &verdict,
@@ -2032,13 +1944,13 @@ impl DynAomiTool for CancelWorldOrder {
     type App = WorldMarketsApp;
     type Args = CancelWorldOrderArgs;
     const NAME: &'static str = "cancel_world_order";
-    const DESCRIPTION: &'static str = "Cancel a resting World order through the local execution sidecar. Requires a bound mandate and a live trader grant. Spot/perp need order_id; lend/borrow need interest_rate.";
+    const DESCRIPTION: &'static str = "Prepare cancellation calldata for a resting World order. Requires a bound mandate and a live OperatingAccount trader grant. Stage, simulate, and commit the returned transaction through the host; the preparer cannot broadcast.";
 
     fn run(app: &WorldMarketsApp, args: Self::Args, ctx: DynToolCallCtx) -> Result<Value, String> {
         let product = normalize_execute_product(&args.product)?;
         let side = normalize_execute_side(product, &args.side)?;
         let access = app.access(args.account_id, args.wallet_address.as_deref(), &ctx)?;
-        Mandate::bound(ctx.attribute_path(&["handover_mandate"]))
+        Mandate::bound(ctx.attribute_path(&["handover", "mandate"]))
             .map_err(|verdict| format!("[world-markets] {}: {}", verdict.rule, verdict.detail))?;
         let assets = app.client.assets()?;
         let base = asset_by_symbol(&assets, &args.base_symbol)?;
@@ -2073,13 +1985,16 @@ impl DynAomiTool for CancelWorldOrder {
             price: args.interest_rate.clone(),
             interest_rate: args.interest_rate.clone(),
         })?;
-        app.refresh_after_trade(&ctx, args.account_id, args.wallet_address.as_deref());
-        Ok(json!({
-            "source": "world-markets-execution",
-            "executable": true,
-            "access": access,
-            "receipt": receipt,
-        }))
+        Ok(execution_ok(
+            &access,
+            &mandate_bound_verdict(),
+            receipt,
+            json!({
+                "operation": "cancel_order",
+                "product": product,
+                "base_symbol": base.symbol,
+            }),
+        ))
     }
 }
 
@@ -2087,7 +2002,7 @@ impl DynAomiTool for ExecuteWorldSwap {
     type App = WorldMarketsApp;
     type Args = ExecuteWorldSwapArgs;
     const NAME: &'static str = "execute_world_swap";
-    const DESCRIPTION: &'static str = "Swap two World assets through the local execution sidecar (SwapAggregator) after the mandate allows the equivalent spot intent.";
+    const DESCRIPTION: &'static str = "Prepare exact SwapAggregator calldata after the mandate allows the equivalent spot intent. Stage, simulate, and commit the returned transaction through the host; the preparer cannot broadcast.";
 
     fn run(app: &WorldMarketsApp, args: Self::Args, ctx: DynToolCallCtx) -> Result<Value, String> {
         let amount_in = parse_decimal(&args.amount_in, "amount_in")
@@ -2145,7 +2060,6 @@ impl DynAomiTool for ExecuteWorldSwap {
             amount_in: args.amount_in.clone(),
             slippage: args.slippage.clone(),
         })?;
-        app.refresh_after_trade(&ctx, args.account_id, args.wallet_address.as_deref());
         Ok(execution_ok(
             &access,
             &verdict,
@@ -2163,11 +2077,11 @@ impl DynAomiTool for RenewWorldLoans {
     type App = WorldMarketsApp;
     type Args = RenewWorldLoansArgs;
     const NAME: &'static str = "renew_world_loans";
-    const DESCRIPTION: &'static str = "Extend borrower loans that are due or within the given hour window, via the local execution sidecar. Requires a bound mandate and a live trader grant. Routine renewals are silent in chat.";
+    const DESCRIPTION: &'static str = "Prepare the complete atomic call list to extend borrower loans that are due or within the given hour window. Requires a bound mandate and a live OperatingAccount trader grant.";
 
     fn run(app: &WorldMarketsApp, args: Self::Args, ctx: DynToolCallCtx) -> Result<Value, String> {
         let access = app.access(args.account_id, args.wallet_address.as_deref(), &ctx)?;
-        let mandate = Mandate::bound(ctx.attribute_path(&["handover_mandate"]))
+        let mandate = Mandate::bound(ctx.attribute_path(&["handover", "mandate"]))
             .map_err(|verdict| format!("[world-markets] {}: {}", verdict.rule, verdict.detail))?;
         let (_assets, account) = app.live_account(&access)?;
         let rapv = parse_decimal(
@@ -2214,13 +2128,12 @@ impl DynAomiTool for RenewWorldLoans {
             token_ids,
             max_hours_remaining: args.within_hours,
         })?;
-        app.refresh_after_trade(&ctx, args.account_id, args.wallet_address.as_deref());
-        Ok(json!({
-            "source": "world-markets-execution",
-            "executable": true,
-            "access": access,
-            "receipt": receipt,
-        }))
+        Ok(execution_ok(
+            &access,
+            &mandate_bound_verdict(),
+            receipt,
+            json!({ "operation": "renew_loans" }),
+        ))
     }
 }
 
@@ -2228,7 +2141,7 @@ impl DynAomiTool for PayWorldLoanInterest {
     type App = WorldMarketsApp;
     type Args = PayWorldLoanInterestArgs;
     const NAME: &'static str = "pay_world_loan_interest";
-    const DESCRIPTION: &'static str = "Pay interest and fees on live borrower loans through the local execution sidecar. Does not extend the term unless extend_period is true. Requires a bound mandate.";
+    const DESCRIPTION: &'static str = "Prepare the complete atomic call list to pay interest and fees on live borrower loans. Does not extend the term unless extend_period is true. Requires a bound mandate.";
 
     fn run(app: &WorldMarketsApp, args: Self::Args, ctx: DynToolCallCtx) -> Result<Value, String> {
         let (access, token_ids) = app.loan_execution_prep(
@@ -2243,13 +2156,12 @@ impl DynAomiTool for PayWorldLoanInterest {
             position_id: None,
             extend_period: args.extend_period,
         })?;
-        app.refresh_after_trade(&ctx, args.account_id, args.wallet_address.as_deref());
-        Ok(json!({
-            "source": "world-markets-execution",
-            "executable": true,
-            "access": access,
-            "receipt": receipt,
-        }))
+        Ok(execution_ok(
+            &access,
+            &mandate_bound_verdict(),
+            receipt,
+            json!({ "operation": "pay_loan_interest" }),
+        ))
     }
 }
 
@@ -2257,7 +2169,7 @@ impl DynAomiTool for CloseWorldLoan {
     type App = WorldMarketsApp;
     type Args = CloseWorldLoanArgs;
     const NAME: &'static str = "close_world_loan";
-    const DESCRIPTION: &'static str = "Close borrower loans and pay remaining interest through the local execution sidecar. Requires a bound mandate. Pass position_id to close one loan, or a base_symbol to close matching borrows.";
+    const DESCRIPTION: &'static str = "Prepare the complete atomic call list to close borrower loans and pay remaining interest. Requires a bound mandate. Pass position_id to close one loan, or a base_symbol to close matching borrows.";
 
     fn run(app: &WorldMarketsApp, args: Self::Args, ctx: DynToolCallCtx) -> Result<Value, String> {
         let (access, token_ids) = app.loan_execution_prep(
@@ -2271,13 +2183,12 @@ impl DynAomiTool for CloseWorldLoan {
             token_ids,
             position_id: numeric_position_id(args.position_id.as_deref()),
         })?;
-        app.refresh_after_trade(&ctx, args.account_id, args.wallet_address.as_deref());
-        Ok(json!({
-            "source": "world-markets-execution",
-            "executable": true,
-            "access": access,
-            "receipt": receipt,
-        }))
+        Ok(execution_ok(
+            &access,
+            &mandate_bound_verdict(),
+            receipt,
+            json!({ "operation": "close_loan" }),
+        ))
     }
 }
 
@@ -2473,7 +2384,7 @@ impl DynAomiTool for ComputeResize {
     const DESCRIPTION: &'static str = "For a blocked intent, return the user's RAPV floor from the signed mandate. A block cites exactly one number: the floor. Never executes.";
 
     fn run(app: &WorldMarketsApp, args: Self::Args, ctx: DynToolCallCtx) -> Result<Value, String> {
-        let mandate = Mandate::bound(ctx.attribute_path(&["handover_mandate"]))
+        let mandate = Mandate::bound(ctx.attribute_path(&["handover", "mandate"]))
             .map_err(|verdict| format!("[world-markets] {}: {}", verdict.rule, verdict.detail))?;
         let floor = parse_decimal(&mandate.min_risk_adjusted_portfolio_value.amount, "floor")
             .map_err(|verdict| format!("[world-markets] {}: {}", verdict.rule, verdict.detail))?;
@@ -2939,7 +2850,7 @@ impl DynAomiTool for GetWorldResearch {
                 "source": "get_world_account",
             })
         });
-        let mandate = Mandate::bound(ctx.attribute_path(&["handover_mandate"])).ok();
+        let mandate = Mandate::bound(ctx.attribute_path(&["handover", "mandate"])).ok();
         crate::research::compose(
             &app.client,
             &app.brain,
@@ -2979,7 +2890,7 @@ impl DynAomiTool for GetWorldTasks {
         app.note_activity(&ctx, args.account_id);
         let _owner = args.wallet_address.as_deref();
         let account_id = WorldMarketsApp::account_id(&ctx, args.account_id);
-        let mandate = Mandate::bound(ctx.attribute_path(&["handover_mandate"]));
+        let mandate = Mandate::bound(ctx.attribute_path(&["handover", "mandate"]));
         let brief = WorldMarketsApp::brief(&ctx);
         let mut value = crate::tasks::compose(&app.brain, account_id, mandate, brief.as_ref());
         if args.detail.as_deref() != Some("full") {
@@ -3150,10 +3061,9 @@ impl DynAomiTool for CancelWorldTask {
     fn run(app: &WorldMarketsApp, args: Self::Args, ctx: DynToolCallCtx) -> Result<Value, String> {
         let kind = args.kind.to_ascii_lowercase();
         if kind == "policy" || kind == "policies" {
-            let mandate =
-                Mandate::bound(ctx.attribute_path(&["handover_mandate"])).map_err(|verdict| {
-                    format!("[world-markets] {}: {}", verdict.rule, verdict.detail)
-                })?;
+            let mandate = Mandate::bound(ctx.attribute_path(&["handover", "mandate"])).map_err(
+                |verdict| format!("[world-markets] {}: {}", verdict.rule, verdict.detail),
+            )?;
             return Ok(crate::tasks::policy_edit_block(&mandate));
         }
         let account_id = WorldMarketsApp::account_id(&ctx, args.account_id)
@@ -3573,14 +3483,34 @@ fn execution_blocked(
 }
 
 fn execution_ok(access: &AccountAccess, verdict: &Verdict, receipt: Value, intent: Value) -> Value {
+    let transactions = receipt
+        .get("transactions")
+        .cloned()
+        .unwrap_or_else(|| json!([]));
     json!({
-        "source": "world-markets-execution",
-        "executable": true,
+        "source": "world-markets-preparation",
+        "executable": false,
+        "prepared": true,
+        "atomic_required": true,
         "access": access,
         "intent": intent,
         "policy_result": verdict,
-        "receipt": receipt,
+        "transactions": transactions,
+        "preparation": receipt,
+        "host_workflow": {
+            "stage": "Call evm_stage_tx once for every transaction, in order, copying every field verbatim.",
+            "simulate": "Call simulate_batch once with the complete ordered staged transaction list.",
+            "commit": "Call evm_commit_txs once with that same complete ordered list. Never split or fall back to EOA execution."
+        }
     })
+}
+
+fn mandate_bound_verdict() -> Verdict {
+    Verdict {
+        status: "allow",
+        rule: "mandate_v1",
+        detail: "The bound World mandate permits this account-management action.".to_string(),
+    }
 }
 
 fn normalize_effect_product(product: &str) -> Result<&'static str, String> {
@@ -3825,7 +3755,7 @@ mod tests {
         let owner = app.client.owner_for(account_id).unwrap();
         let attributes = json!({
             "domain": { "evm": { "address": format!("{owner:#x}") } },
-            "handover_mandate": {
+            "handover": { "mandate": {
                 "version": 1,
                 "markets": [{ "product": "perp", "base": "WETH", "quote": "USDT" }],
                 "max_position_notional": { "amount": "25000", "quote": "USDT" },
@@ -3835,7 +3765,7 @@ mod tests {
                 "can_withdraw": false,
                 "account": { "id": account_id },
                 "brief": { "objective": "watch risk" }
-            }
+            } }
         })
         .as_object()
         .unwrap()
@@ -3999,19 +3929,6 @@ mod tests {
             "{message}"
         );
         assert!(!message.to_ascii_lowercase().contains("say buy"));
-    }
-
-    #[test]
-    fn kind_status_seen_but_not_confirmed_is_still_first_instance() {
-        assert!(!kind_confirmed_from_status(&json!({})));
-        assert!(!kind_confirmed_from_status(
-            &json!({ "ok": true, "kind": "spot_buy", "confirmed": false })
-        ));
-        assert!(kind_confirmed_from_status(&json!({ "confirmed": true })));
-        let controls = json!([{ "label": "Cancel", "action": "cancel", "instruction_id": "abc" }]);
-        assert_eq!(controls.as_array().unwrap().len(), 1);
-        assert_eq!(controls[0]["label"], "Cancel");
-        assert_ne!(controls[0]["action"], "confirm");
     }
 
     #[test]
@@ -4446,7 +4363,7 @@ mod tests {
     fn compute_resize_carries_floor_and_rule() {
         let app = WorldMarketsApp::default();
         let ctx = ctx_with(json!({
-            "handover_mandate": {
+            "handover": { "mandate": {
                 "version": 1,
                 "markets": [{ "product": "perp", "base": "WETH", "quote": "USDT" }],
                 "max_position_notional": { "amount": "25000", "quote": "USDT" },
@@ -4454,7 +4371,7 @@ mod tests {
                 "min_risk_adjusted_portfolio_value": { "amount": "6000", "quote": "USDT" },
                 "halt_if_eligible_for_liquidation": true,
                 "can_withdraw": false
-            }
+            } }
         }));
         let value = ComputeResize::run(
             &app,

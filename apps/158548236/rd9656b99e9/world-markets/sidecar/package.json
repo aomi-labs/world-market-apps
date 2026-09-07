@@ -2,9 +2,10 @@
   "name": "world-markets-execution-sidecar",
   "private": true,
   "type": "module",
-  "description": "Local-only @wcm-inc/sdk signer for aomi-run. The Rust plugin never sees the key.",
+  "description": "Prepare World Markets calldata for Aomi's canonical AA execution pipeline.",
   "scripts": {
-    "start": "tsx src/server.js"
+    "start": "tsx src/server.js",
+    "test": "tsx --test test/*.test.js"
   },
   "engines": {
     "node": ">=20"

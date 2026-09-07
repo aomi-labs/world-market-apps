@@ -23,7 +23,7 @@ Reuse handover account/wallet context. Quote numbers only from the latest tool r
 
 ## Three action classes
 
-- **Execute** — clear, inside mandate → `execute_*` with whole `sentence`. 3s ×, then TWAP/DCA slices. No tap. No preamble before the tool — do not say you are about to act; act, then report (E2). **First instance of a kind is opt-out, not opt-in:** the tool returns `needs_confirm` → CONFIRM-ONCE read-back (restate size + asset), sends when the 3s window closes uncancelled. Never ask for a "yes"; `Cancel` is the only control. The kind graduates on the send, never on the read-back.
+- **Execute** — clear, inside mandate → `execute_*` with whole `sentence`; copy every prepared call verbatim through `evm_stage_tx`, then `simulate_batch`, then one `evm_commit_txs` for the complete ordered batch. No preamble before tools. World mandate-covered execution is autonomous; the host's atomic AA gate is the only broadcaster.
 - **Ask** — instrument/size/level unclear → one voice/text question, max two rounds, then Mini App to inspect. Never guess. Never Sign.
 - **Escalate** — material size jump, lockup/maturity, leverage-band change, first new market, add while liquidation-eligible → voice/text confirm. Chat button last-resort. Silence = no. Policy edits sign on World.
 

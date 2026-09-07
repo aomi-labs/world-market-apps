@@ -641,14 +641,6 @@ pub fn submit_heard(account_id: u64, text: &str, extra: Option<&Value>) -> Optio
     crate::cant::try_heard(account_id, text, extra)
 }
 
-pub fn flush_staged_trade(account_id: u64, instruction_id: &str) -> Result<Value, String> {
-    crate::staged::flush_staged_trade(account_id, instruction_id)
-}
-
-pub fn flush_due_trades(account_id: u64) -> Result<Value, String> {
-    crate::staged::flush_due_trades(account_id)
-}
-
 /// Best-effort Bot API send. Failures are logged by the caller; they must not
 /// undo a completed ledger cancel.
 pub fn post_chat_lines(bot_token: &str, chat_id: u64, lines: &[String]) -> Result<(), String> {

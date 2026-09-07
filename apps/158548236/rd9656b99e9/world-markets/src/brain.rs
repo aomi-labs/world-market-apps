@@ -129,69 +129,6 @@ impl BrainClient {
         self.post("/v1/compose", body)
     }
 
-    pub(crate) fn stage_trade(&self, body: &Value) -> Result<Value, String> {
-        self.post("/v1/trades/stage", body)
-    }
-
-    #[allow(dead_code)]
-    pub(crate) fn begin_execute(
-        &self,
-        account_id: u64,
-        instruction_id: &str,
-    ) -> Result<Value, String> {
-        self.post(
-            "/v1/trades/begin",
-            &json!({ "account_id": account_id, "instruction_id": instruction_id }),
-        )
-    }
-
-    pub(crate) fn claim_slice(
-        &self,
-        account_id: u64,
-        instruction_id: &str,
-    ) -> Result<Value, String> {
-        self.post(
-            "/v1/trades/claim",
-            &json!({ "account_id": account_id, "instruction_id": instruction_id }),
-        )
-    }
-
-    pub(crate) fn record_slice(
-        &self,
-        account_id: u64,
-        instruction_id: &str,
-        body: &Value,
-    ) -> Result<Value, String> {
-        let mut payload = body.clone();
-        if let Some(obj) = payload.as_object_mut() {
-            obj.insert("account_id".to_string(), json!(account_id));
-            obj.insert("instruction_id".to_string(), json!(instruction_id));
-        }
-        self.post("/v1/trades/progress", &payload)
-    }
-
-    pub(crate) fn due_trades(&self, account_id: Option<u64>) -> Result<Value, String> {
-        let path = match account_id {
-            Some(id) => format!("/v1/trades/due?account_id={id}"),
-            None => "/v1/trades/due".to_string(),
-        };
-        self.get(&path)
-    }
-
-    pub(crate) fn complete_execute(
-        &self,
-        account_id: u64,
-        instruction_id: &str,
-        body: &Value,
-    ) -> Result<Value, String> {
-        let mut payload = body.clone();
-        if let Some(obj) = payload.as_object_mut() {
-            obj.insert("account_id".to_string(), json!(account_id));
-            obj.insert("instruction_id".to_string(), json!(instruction_id));
-        }
-        self.post("/v1/trades/complete", &payload)
-    }
-
     pub(crate) fn pause_watch(
         &self,
         account_id: u64,
@@ -339,19 +276,6 @@ impl BrainClient {
 
     pub(crate) fn share(&self, body: &Value) -> Result<Value, String> {
         self.post("/v1/share", body)
-    }
-
-    pub(crate) fn confirm_action_kind(&self, account_id: u64, kind: &str) -> Result<Value, String> {
-        self.post(
-            "/v1/action-kinds/confirm",
-            &json!({ "account_id": account_id, "kind": kind }),
-        )
-    }
-
-    pub(crate) fn action_kind_status(&self, account_id: u64, kind: &str) -> Result<Value, String> {
-        self.get(&format!(
-            "/v1/action-kinds?account_id={account_id}&kind={kind}"
-        ))
     }
 
     pub(crate) fn supersede_watch(&self, body: &Value) -> Result<Value, String> {

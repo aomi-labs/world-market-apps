@@ -3,7 +3,7 @@
 - The thread is the record; the surface that asked renders the answer. Redirects happen only when the NEXT ACTION lives in the thread (escalation confirms), and then with a stated reason.
 - **Compose transport.** v3 `sendData` did not exist. Client path is `Telegram.WebApp.sendData`; local/dev and the host webhook land on `POST /api/v1/mini-app/compose`. No mutating `/ledger*` route.
 - **Watcher.** Wrapped `brain/src/watches.js`; did not build a second evaluator.
-- **Submit gate.** Voice and text in the thread submit trades (`execute_*` → sidecar `WORLD_PRIVATE_KEY`). The Mini App never hosts a confirm and never places an order. Chat inline buttons are last-resort only when the agent decides the ticket is unclear or extremely risky.
+- **Submit gate.** Voice and text in the thread may ask the agent to trade. Mutation tools prepare calldata only; Aomi seals, authorizes, and atomically submits the complete bundle from the OperatingAccount. The Mini App never signs or places an order.
 - **Mini App buttons.** Navigation and data only (ledger, portfolio, charts, hold-to-talk as a mic). Slides draft text into the thread; they do not sign and they do not execute.
 - **Pause.** Spec default: draft to the thread; `pause_world_watch` when the agent processes it. No Sign button.
 - **Cancel.** Ledger × sends whole-message `cancel task {id}` in the background (`sendData` is not used, so the mini app stays open). Host `render_lookup` skips the LLM and drops the watch — not a trade. Chat echo is the bot posting the command and the result. Resting **order** cancel is `cancel_world_order` via voice/text.
@@ -11,7 +11,7 @@
 - **Desk context.** `GET /api/v1/desk/context` remains a read-only book snapshot (session or `X-Desk-Token` / `DESK_BRIDGE_TOKEN`). It is not a ledger write and not a voice path.
 - **Job-line negative form.** `WORLD_MINI_JOBLINE_NEGATIVE` default off.
 - **Expiry / visibility.** 30-day watch TTL (existing); 90-day ledger visibility for done/expired.
-- **3s cancel then fill.** A clear trade instruction is staged as `pending_execute` with the user's whole sentence. The Mini App shows it in **Queued** for 3 seconds (empty meter, countdown, × to cancel). After 3s the plugin thread (Mini App compose `flush_execute` as backup) `begin`s then fills. The row stays in Queued while a loading bar completes over 1 second — even when the fill itself is instant — then moves to **Done**. TWAP/DCA keep real progress in Queued until the last slice. No fabricated fill ticks. The Mini App UI never hosts confirm and never places; server flush after the delay is the backup path.
+- **Execution status.** The Mini App renders persisted ledger state only. It never advances, flushes, signs, or executes a queued trade; canonical Action and AA receipts drive status changes.
 - **Executing / TWAP.** No fabricated fill ticks. Executing rows render only when the ledger has real progress fields.
 - **Digest.** Skill copy in §6.14 (tightened to fit the 8k skill budget). Labor line from `ledger.labor` when holding>0; startapp `i_`+id. No new push channel.
 - **Event store.** Brain JSON files, same as watches. Voice utterances, lexicon, consents, episodes, and correction pairs live under `WORLD_BRAIN_DIR/voice`. Audio blobs under `WORLD_BRAIN_DIR/audio`. No Graphiti in this repo.

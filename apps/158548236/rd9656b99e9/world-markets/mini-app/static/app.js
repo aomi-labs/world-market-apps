@@ -40,7 +40,6 @@ let ageTimerMs = 250;
 let toastTimer = null;
 let burstTimer = null;
 let suppressClickUntil = 0;
-const flushedIds = new Set();
 const DISMISS_KEY = "aomi.ledger.dismissed";
 
 const state = {
@@ -4643,7 +4642,6 @@ async function refreshLedger() {
       const skip = state.view === "main" && key === lastMainPaintKey;
       if (!skip) paint();
     }
-    maybeFlushDue();
     tunePoll();
   } catch (err) {
     if (err.message === "unauthorized") return renderUnauthorized();
@@ -4659,7 +4657,6 @@ async function refreshLedger() {
 }
 
 function patchLiveClock() {
-  maybeFlushDue();
   if (
     state.view !== "main" ||
     state.searchOpen ||
@@ -4770,49 +4767,6 @@ function burstPoll() {
     refreshLedger();
     if (++n >= 12) clearInterval(burstTimer);
   }, 500);
-}
-
-function maybeFlushDue() {
-  const preview = previewState();
-  if (preview && preview !== "dev") return;
-  for (const row of state.ledger) {
-    if (row.queued_local) continue;
-    if (!isFlushDue(row)) continue;
-    const key = flushKey(row);
-    if (flushedIds.has(key)) continue;
-    flushedIds.add(key);
-    api("/api/v1/mini-app/compose", {
-      method: "POST",
-      body: { kind: "flush_execute", instruction_id: row.instruction_id, message: "" },
-    })
-      .then(() => refreshLedger())
-      .catch(() => {
-        flushedIds.delete(key);
-      });
-  }
-}
-
-function isFlushDue(row) {
-  if (!row) return false;
-  if (row.status === "pending_execute") {
-    const rem = remainingQueueSecs(row, Date.now());
-    return rem != null && rem <= 0;
-  }
-  if (row.status === "executing") {
-    if (row.next_slice_at) return nowSecs() >= Number(row.next_slice_at);
-    const fills = Array.isArray(row.child_fills) ? row.child_fills.length : 0;
-    return fills === 0;
-  }
-  return false;
-}
-
-function flushKey(row) {
-  return [
-    row.instruction_id,
-    row.status,
-    row.slice_i || 0,
-    row.next_slice_at || row.execute_at || 0,
-  ].join(":");
 }
 
 function renderUnauthorized() {

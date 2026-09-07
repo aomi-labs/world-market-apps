@@ -10,7 +10,7 @@ import httpx
 
 
 class WorldRails:
-    """Thin HTTP client. No private key; the execution sidecar signs."""
+    """Thin HTTP client. The execution sidecar only prepares calldata."""
 
     def __init__(
         self,

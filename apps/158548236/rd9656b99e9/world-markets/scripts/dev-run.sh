@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Local aomi-run with the execution sidecar. The plugin never sees WORLD_PRIVATE_KEY.
+# Local aomi-run with the calldata preparation sidecar.
 # Wipe residual brain state: WORLD_BRAIN_WIPE=1 or --wipe (deletes WORLD_BRAIN_DIR).
 set -euo pipefail
 
@@ -7,7 +7,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 if [[ ! -f .env ]]; then
-  echo "copy .env.example to .env and set OPENROUTER_API_KEY, WORLD_ACCOUNT_ID, WORLD_PRIVATE_KEY" >&2
+  echo "copy .env.example to .env and set OPENROUTER_API_KEY and WORLD_ACCOUNT_ID" >&2
   exit 1
 fi
 
