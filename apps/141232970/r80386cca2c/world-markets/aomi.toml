@@ -2,3 +2,4 @@
 name = "world-markets"
 display_name = "World Markets Agent"
 public = true
+handover = "wallet"
