@@ -1,3 +1,5 @@
+# Production retains the legacy builder until its manager uses deploy-project dispatch.
+# Staging uses deploy-project.yml and must not also run this push build.
 name: Build Candidate App Release
 # Kept on the default branch so GitHub registers candidate-branch runs.
 
@@ -7,8 +9,8 @@ on:
       - "*/*/*/*"
     paths:
       - "apps/**"
-      - ".github/scripts/build_candidate.py"
-      - ".github/scripts/test_build_candidate.py"
+      - ".github/scripts/build_candidate_legacy.py"
+      - ".github/scripts/test_build_candidate_legacy.py"
       - ".github/workflows/build-candidate.yml"
 
 permissions:
@@ -21,7 +23,7 @@ concurrency:
 jobs:
   build:
     name: Build candidate release
-    if: github.actor == 'aomi-build[bot]' || github.actor == 'aomi-build-staging[bot]'
+    if: github.actor == 'aomi-build[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,7 +31,7 @@ jobs:
           fetch-depth: 0
 
       - name: Test release builder
-        run: python3 .github/scripts/test_build_candidate.py
+        run: python3 .github/scripts/test_build_candidate_legacy.py
 
       - name: Fetch publish baseline
         run: git fetch origin publish:refs/remotes/origin/publish
@@ -37,7 +39,7 @@ jobs:
       - name: Detect candidate apps
         id: detect
         run: |
-          python3 .github/scripts/build_candidate.py detect \
+          python3 .github/scripts/build_candidate_legacy.py detect \
             --base origin/publish \
             --head "${{ github.sha }}" \
             --github-output "$GITHUB_OUTPUT"
@@ -59,7 +61,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          python3 .github/scripts/build_candidate.py release \
+          python3 .github/scripts/build_candidate_legacy.py release \
             --base origin/publish \
             --head "${{ github.sha }}" \
             --target x86_64-unknown-linux-gnu \

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import os
@@ -8,7 +9,6 @@ import pathlib
 import re
 import shutil
 import subprocess
-import sys
 import tarfile
 import tempfile
 import tomllib
@@ -24,6 +24,7 @@ APP_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 REPO_KEY_RE = re.compile(r"^r[0-9a-f]{10}$")
 COMMIT_RE = re.compile(r"^[0-9a-f]{7,40}$")
 SHA256_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
+_PLATFORM_CONFIG: dict[str, Any] | None = None
 
 
 def fail(message: str) -> None:
@@ -45,15 +46,12 @@ def run(
         cwd=cwd or REPO_ROOT,
         env=merged_env,
         text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stdout=subprocess.PIPE if capture else None,
+        stderr=subprocess.PIPE if capture else None,
     )
-    if not capture:
-        print(result.stdout or "", end="")
-        print(result.stderr or "", end="", file=sys.stderr)
     if result.returncode != 0:
         command = " ".join(cmd)
-        detail = (result.stderr or "")[-6000:].strip()
+        detail = result.stderr.strip() if capture and result.stderr else ""
         fail(f"command failed ({command}): {detail}")
     return result.stdout.strip() if capture and result.stdout else ""
 
@@ -88,6 +86,17 @@ def git(args: list[str], *, capture: bool = True) -> str:
     return run(["git", *args], capture=capture)
 
 
+def gh(args: list[str], *, capture: bool = True) -> str:
+    return run(["gh", *args], capture=capture)
+
+
+def current_branch() -> str:
+    ref_name = os.environ.get("GITHUB_REF_NAME", "").strip()
+    if ref_name:
+        return ref_name
+    return git(["branch", "--show-current"])
+
+
 def current_commit() -> str:
     return os.environ.get("GITHUB_SHA", "").strip() or git(["rev-parse", "HEAD"])
 
@@ -102,6 +111,27 @@ def load_json(path: pathlib.Path) -> dict[str, Any]:
     if not isinstance(value, dict):
         fail(f"{path} must contain a JSON object")
     return value
+
+
+def platform_config() -> dict[str, Any]:
+    global _PLATFORM_CONFIG
+    if _PLATFORM_CONFIG is None:
+        _PLATFORM_CONFIG = load_json(REPO_ROOT / "platform.json")
+    return _PLATFORM_CONFIG
+
+
+def platform_name() -> str:
+    value = platform_config().get("name")
+    if not isinstance(value, str) or not value.strip():
+        fail("platform.json must define a non-empty name")
+    return value.strip()
+
+
+def required_sdk_version() -> str:
+    value = platform_config().get("required_sdk_version")
+    if not isinstance(value, str) or not value.strip():
+        fail("platform.json must define a non-empty required_sdk_version")
+    return value.strip()
 
 
 def write_json(path: pathlib.Path, value: dict[str, Any]) -> None:
@@ -119,6 +149,47 @@ def sha256_prefixed_file(path: pathlib.Path) -> str:
 
 def relpath(path: pathlib.Path) -> str:
     return path.relative_to(REPO_ROOT).as_posix()
+
+
+def branch_context() -> dict[str, str]:
+    branch = current_branch()
+    match = BRANCH_RE.match(branch)
+    if not match:
+        fail(
+            "candidate release workflow must run on "
+            "`<owner>/<repo>/<installation-id>/<short-commit>` branches"
+        )
+    value = match.groupdict()
+    value["owner_repo"] = f"{value['owner'].lower()}/{value['repo'].lower()}"
+    value["short_commit"] = value["short_commit"].lower()
+    value["branch"] = branch
+    return value
+
+
+def changed_paths(base: str, head: str) -> list[str]:
+    base = base.strip()
+    head = head.strip() or "HEAD"
+    if base:
+        try:
+            return git(["diff", "--name-only", base, head]).splitlines()
+        except SystemExit:
+            pass
+    return git(["diff-tree", "--root", "--no-commit-id", "--name-only", "-r", head]).splitlines()
+
+
+def changed_app_dirs(base: str, head: str) -> list[str]:
+    dirs: set[str] = set()
+    for path in changed_paths(base, head):
+        parts = pathlib.PurePosixPath(path).parts
+        if (
+            len(parts) >= 4
+            and parts[0] == "apps"
+            and parts[1].isdigit()
+            and REPO_KEY_RE.match(parts[2])
+            and not parts[3].startswith(".")
+        ):
+            dirs.add("/".join(parts[:4]))
+    return sorted(dirs)
 
 
 def get_str(value: dict[str, Any], path: tuple[str, ...], *, required: bool = True) -> str | None:
@@ -173,12 +244,11 @@ def resolve_sdk_version(app_dir: pathlib.Path) -> str:
         [
             "cargo",
             "metadata",
-            "--locked",
             "--format-version",
             "1",
             "--manifest-path",
             str(manifest_path),
-        ], cwd=app_dir,
+        ]
     )
     metadata = json.loads(output)
     packages = {pkg["id"]: pkg for pkg in metadata.get("packages", [])}
@@ -272,7 +342,7 @@ def deployment_app_record(
     return matches[0]
 
 
-def load_deployment(app_dir: pathlib.Path, ctx: dict[str, str], target: str, source_dir: pathlib.Path | None = None) -> dict[str, str]:
+def load_deployment(app_dir: pathlib.Path, ctx: dict[str, str], target: str) -> dict[str, str]:
     path = app_dir / ".aomi" / "deployment.json"
     manifest = load_json(path)
     parts = app_dir.relative_to(REPO_ROOT).parts
@@ -296,7 +366,7 @@ def load_deployment(app_dir: pathlib.Path, ctx: dict[str, str], target: str, sou
             fail(f"deployment manifest app.name must be {app_name}")
         source_commit = get_str(manifest, ("source", "commit")).lower()
         source_repo = get_str(manifest, ("source", "repository_link"), required=False)
-        platform_name = get_str(manifest, ("platform", "name"))
+        manifest_platform = get_str(manifest, ("platform", "name"))
         app_path = get_str(manifest, ("target", "app_path"))
         release_tag = get_str(manifest, ("target", "release_tag"))
         manifest_target = get_str(manifest, ("target", "target"), required=False)
@@ -306,7 +376,7 @@ def load_deployment(app_dir: pathlib.Path, ctx: dict[str, str], target: str, sou
         source_repo = get_str(manifest, ("source", "owner_repo_name"), required=False)
         if source_repo is None:
             source_repo = get_str(manifest, ("source", "repository_link"), required=False)
-        platform_name = get_str(manifest, ("platform", "platform"))
+        manifest_platform = get_str(manifest, ("platform", "platform"))
         app_path = get_str(app_record, ("path",))
         release_tag = get_str(app_record, ("release_tag",))
         manifest_target = get_str(app_record, ("target",), required=False)
@@ -318,8 +388,9 @@ def load_deployment(app_dir: pathlib.Path, ctx: dict[str, str], target: str, sou
     if source_repo and normalize_repo(source_repo) != ctx["owner_repo"]:
         fail("deployment manifest source repo does not match branch owner/repo")
 
-    if platform_name != ctx.get("platform", "community"):
-        fail("deployment manifest platform does not match the project")
+    expected_platform = platform_name()
+    if manifest_platform != expected_platform:
+        fail(f"deployment manifest platform must be {expected_platform}")
 
     if app_path != expected_app_path:
         fail(f"deployment manifest app path must be {expected_app_path}")
@@ -331,7 +402,7 @@ def load_deployment(app_dir: pathlib.Path, ctx: dict[str, str], target: str, sou
     if manifest_target and manifest_target != target:
         fail(f"deployment manifest target must be {target}")
 
-    validate_file_manifest(source_dir or app_dir, files)
+    validate_file_manifest(app_dir, files)
     return {
         "app_name": app_name,
         "installation_id": installation_id,
@@ -339,6 +410,7 @@ def load_deployment(app_dir: pathlib.Path, ctx: dict[str, str], target: str, sou
         "release_tag": release_tag,
         "deployment_manifest": relpath(path),
         "app_path": expected_app_path,
+        "platform": expected_platform,
     }
 
 
@@ -464,22 +536,23 @@ def read_plugin_secrets(plugin_path: pathlib.Path, sdk_version: str) -> list[dic
     return secrets
 
 
-def build_release(app_dir: pathlib.Path, ctx: dict[str, str], target: str, dist_root: pathlib.Path, source_dir: pathlib.Path | None = None) -> dict[str, str]:
-    info = load_deployment(app_dir, ctx, target, source_dir)
-    source_dir = source_dir or app_dir
+def build_release(app_dir: pathlib.Path, ctx: dict[str, str], target: str, dist_root: pathlib.Path) -> dict[str, str]:
+    info = load_deployment(app_dir, ctx, target)
     app_name = info["app_name"]
-    package_name, lib_name = parse_cargo_manifest(source_dir)
-    sdk_version = resolve_sdk_version(source_dir)
-    expected_sdk = ctx.get("sdk_version")
-    if expected_sdk and sdk_version != expected_sdk:
-        fail(f"{app_name}: aomi-sdk {sdk_version} does not match required {expected_sdk}")
+    package_name, lib_name = parse_cargo_manifest(app_dir)
+    sdk_version = resolve_sdk_version(app_dir)
+    expected_sdk_version = required_sdk_version()
+    if sdk_version != expected_sdk_version:
+        fail(
+            f"{relpath(app_dir)} must pin aomi-sdk {expected_sdk_version}, "
+            f"got {sdk_version}"
+        )
 
     target_dir = REPO_ROOT / ".aomi-ci-target"
     run(
         [
             "cargo",
             "build",
-            "--locked",
             "--lib",
             "--release",
             "--target",
@@ -487,10 +560,9 @@ def build_release(app_dir: pathlib.Path, ctx: dict[str, str], target: str, dist_
             "--target-dir",
             str(target_dir),
             "--manifest-path",
-            str(source_dir / "Cargo.toml"),
+            str(app_dir / "Cargo.toml"),
         ],
         capture=False,
-        cwd=source_dir,
     )
 
     built_lib = target_dir / target / "release" / cargo_lib_name(lib_name, target)
@@ -531,7 +603,7 @@ def build_release(app_dir: pathlib.Path, ctx: dict[str, str], target: str, dist_
     shutil.copy2(manifest_path, standalone_manifest)
     release_metadata = {
         "schema_version": 1,
-        "platform": ctx.get("platform", "community"),
+        "platform": info["platform"],
         "app": {
             "name": app_name,
             "path": info["app_path"],
@@ -564,7 +636,7 @@ def build_release(app_dir: pathlib.Path, ctx: dict[str, str], target: str, dist_
     notes.write_text(
         "\n".join(
             [
-                f"Aomi {ctx.get("platform", "community")} candidate release.",
+                f"Aomi {info['platform']} candidate release.",
                 "",
                 f"- App: {app_name}",
                 f"- Release: {release_tag}",
@@ -600,3 +672,87 @@ def verify_tarball(tarball: pathlib.Path, expected_manifest: dict[str, Any]) -> 
                 fail(f"tarball plugin missing for {name}")
             if sha256_file(plugin) != entry["sha256"]:
                 fail(f"tarball plugin checksum mismatch for {name}")
+
+
+def publish_release(bundle: dict[str, str]) -> None:
+    release_tag = bundle["release_tag"]
+    if not os.environ.get("GH_TOKEN"):
+        fail("GH_TOKEN is required to publish candidate releases")
+    assets = [bundle["tarball"], bundle["manifest"], bundle["metadata"]]
+    existing = subprocess.run(
+        ["gh", "release", "view", release_tag],
+        cwd=REPO_ROOT,
+        env=os.environ.copy(),
+        text=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    if existing.returncode == 0:
+        gh(["release", "upload", release_tag, *assets, "--clobber"], capture=False)
+    else:
+        gh(
+            [
+                "release",
+                "create",
+                release_tag,
+                "--target",
+                current_commit(),
+                "--title",
+                release_tag,
+                "--notes-file",
+                bundle["notes"],
+                *assets,
+            ],
+            capture=False,
+        )
+
+
+def command_detect(args: argparse.Namespace) -> None:
+    branch_context()
+    dirs = changed_app_dirs(args.base, args.head)
+    value = json.dumps(dirs)
+    print(value)
+    if args.github_output:
+        with pathlib.Path(args.github_output).open("a", encoding="utf-8") as fh:
+            fh.write(f"apps={value}\n")
+
+
+def command_release(args: argparse.Namespace) -> None:
+    ctx = branch_context()
+    dirs = changed_app_dirs(args.base, args.head)
+    if not dirs:
+        print("No candidate app directories changed.")
+        return
+    dist_root = (REPO_ROOT / args.dist_dir).resolve()
+    if dist_root.exists():
+        shutil.rmtree(dist_root)
+    dist_root.mkdir(parents=True)
+    for app_dir in dirs:
+        bundle = build_release(REPO_ROOT / app_dir, ctx, args.target, dist_root)
+        publish_release(bundle)
+        print(f"published {bundle['release_tag']}")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Build backend-deployed Aomi candidate apps")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    detect = subparsers.add_parser("detect")
+    detect.add_argument("--base", required=True)
+    detect.add_argument("--head", default="HEAD")
+    detect.add_argument("--github-output")
+    detect.set_defaults(func=command_detect)
+
+    release = subparsers.add_parser("release")
+    release.add_argument("--base", required=True)
+    release.add_argument("--head", default="HEAD")
+    release.add_argument("--target", default="x86_64-unknown-linux-gnu")
+    release.add_argument("--dist-dir", default="dist")
+    release.set_defaults(func=command_release)
+
+    args = parser.parse_args()
+    args.func(args)
+
+
+if __name__ == "__main__":
+    main()
