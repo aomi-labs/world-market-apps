@@ -1,8 +1,39 @@
-import json, pathlib, subprocess, sys, unittest
-import tempfile
-from unittest.mock import patch
+import json, pathlib, subprocess, sys, tempfile, unittest
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-import build_candidate as bc
+import build_candidate_legacy as bc
+
+
+class PlatformConfigTests(unittest.TestCase):
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp_dir.cleanup)
+        self.addCleanup(setattr, bc, "REPO_ROOT", bc.REPO_ROOT)
+        self.addCleanup(setattr, bc, "_PLATFORM_CONFIG", bc._PLATFORM_CONFIG)
+        bc.REPO_ROOT = pathlib.Path(self.temp_dir.name)
+        bc._PLATFORM_CONFIG = None
+
+    def write_config(self, **overrides):
+        config = {
+            "name": "world-market-apps",
+            "required_sdk_version": "4.0.0",
+            **overrides,
+        }
+        (bc.REPO_ROOT / "platform.json").write_text(json.dumps(config))
+
+    def test_reads_platform_contract(self):
+        self.write_config()
+        self.assertEqual(bc.platform_name(), "world-market-apps")
+        self.assertEqual(bc.required_sdk_version(), "4.0.0")
+
+    def test_rejects_missing_platform_name(self):
+        self.write_config(name="")
+        with self.assertRaises(SystemExit):
+            bc.platform_name()
+
+    def test_rejects_missing_required_sdk_version(self):
+        self.write_config(required_sdk_version="")
+        with self.assertRaises(SystemExit):
+            bc.required_sdk_version()
 
 
 def _completed(*, returncode: int = 0, stdout: str = "", stderr: str = "") -> subprocess.CompletedProcess[str]:

@@ -1,0 +1,228 @@
+name: Deploy Project
+run-name: aomi-deploy|${{ inputs.environment }}|${{ inputs.project_id }}|${{ inputs.source_ref }}|${{ inputs.source_branch }}|${{ inputs.previous_run_id }}
+on:
+  workflow_dispatch:
+    inputs:
+      project_id:
+        required: true
+        type: string
+      previous_run_id:
+        type: string
+        default: ""
+      source_ref:
+        required: true
+        type: string
+      source_branch:
+        type: string
+        default: ""
+      candidate_ref:
+        required: true
+        type: string
+      deployment_id:
+        required: true
+        type: string
+      deployment_path:
+        required: true
+        type: string
+      environment:
+        required: true
+        type: choice
+        options: [staging, production]
+      activate:
+        type: boolean
+        default: true
+permissions: {}
+concurrency:
+  group: project-${{ inputs.environment }}-${{ inputs.project_id }}
+  cancel-in-progress: false
+env:
+  DEPLOY_ENVIRONMENT: ${{ inputs.environment }}
+  PROJECT_ID: ${{ inputs.project_id }}
+  SOURCE_REF: ${{ inputs.source_ref }}
+  CANDIDATE_REF: ${{ inputs.candidate_ref }}
+  DEPLOYMENT_ID: ${{ inputs.deployment_id }}
+  DEPLOYMENT_PATH: ${{ inputs.deployment_path }}
+jobs:
+  prepare:
+    name: Validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      skip: ${{ steps.prepare.outputs.skip }}
+      matrix: ${{ steps.prepare.outputs.matrix }}
+      context_id: ${{ steps.context.outputs.artifact-id }}
+      metadata_id: ${{ steps.metadata.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+      - name: Checkout immutable candidate data
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.candidate_ref }}
+          path: .deployment/candidate
+          persist-credentials: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            ${{ inputs.deployment_path }}
+            .aomi/candidates/${{ inputs.deployment_id }}/
+      - name: Validate and prepare platform candidate
+        id: prepare
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/deploy_project.py prepare
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: steps.prepare.outputs.skip != 'true'
+        id: metadata
+        with:
+          name: deployment-metadata
+          path: |
+            .deployment/deployment.json
+            .deployment/plan.json
+          include-hidden-files: true
+          retention-days: 30
+      - name: Package trusted build scripts
+        if: steps.prepare.outputs.skip != 'true'
+        run: |
+          mkdir -p .deployment/scripts
+          cp .github/scripts/build_candidate.py .github/scripts/deploy_project.py .deployment/scripts/
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: steps.prepare.outputs.skip != 'true'
+        id: context
+        with:
+          name: source-context
+          path: |
+            .deployment/source.tar.gz
+            .deployment/deployment.json
+            .deployment/plan.json
+            .deployment/scripts/
+          include-hidden-files: true
+          retention-days: 1
+  build:
+    name: Build / ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    needs: prepare
+    if: needs.prepare.outputs.skip != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions: {}
+    steps:
+      - name: Reuse verified release
+        if: matrix.reuse
+        run: echo "Reusing the existing immutable release; no build needed."
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        if: ${{ !matrix.reuse }}
+        with:
+          artifact-ids: ${{ needs.prepare.outputs.context_id }}
+          path: .deployment
+          merge-multiple: true
+      - name: Install trusted build scripts
+        if: ${{ !matrix.reuse }}
+        run: |
+          mkdir -p .github/scripts
+          cp .deployment/scripts/*.py .github/scripts/
+      - uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        if: ${{ !matrix.reuse }}
+        with:
+          toolchain: 1.93.0
+          targets: x86_64-unknown-linux-gnu
+      - name: Build app in its original workspace
+        if: ${{ !matrix.reuse }}
+        env:
+          BUILD_APP: ${{ matrix.name }}
+        run: python3 .github/scripts/deploy_project.py build
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        id: bundles
+        if: ${{ !matrix.reuse }}
+        with:
+          name: release-bundles-${{ matrix.name }}
+          path: .deployment/dist/
+          include-hidden-files: true
+          retention-days: 30
+  publish:
+    name: Publish release
+    needs: [prepare, build]
+    if: needs.prepare.outputs.skip != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          artifact-ids: ${{ needs.prepare.outputs.metadata_id }}
+          path: .deployment
+          merge-multiple: true
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: release-bundles-*
+          path: .deployment/dist
+          merge-multiple: true
+      - name: Publish immutable release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/deploy_project.py publish
+  activate:
+    name: Activate
+    needs: [prepare, publish]
+    if: inputs.activate && needs.prepare.outputs.skip != 'true'
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          artifact-ids: ${{ needs.prepare.outputs.metadata_id }}
+          path: .deployment
+          merge-multiple: true
+      - name: Activate verified releases
+        env:
+          AOMI_PLATFORM_TOKEN: ${{ secrets.AOMI_PLATFORM_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/deploy_project.py activate
+  verify:
+    name: Verify runtime / ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    needs: [prepare, activate]
+    if: needs.prepare.outputs.skip != 'true'
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          artifact-ids: ${{ needs.prepare.outputs.metadata_id }}
+          path: .deployment
+          merge-multiple: true
+      - name: Verify actual artifact readiness
+        env:
+          AOMI_PLATFORM_TOKEN: ${{ secrets.AOMI_PLATFORM_TOKEN }}
+          VERIFY_APP: ${{ matrix.name }}
+        run: python3 .github/scripts/deploy_project.py verify
