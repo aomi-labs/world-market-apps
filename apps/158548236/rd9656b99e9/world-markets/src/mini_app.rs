@@ -4,6 +4,7 @@
 //! function produces them. Dollarpower is computed from this account's NAV and
 //! gross notionals — the fixture `get_dollarpower` book is not this user's book.
 
+use std::path::Path;
 use std::str::FromStr;
 use std::sync::OnceLock;
 
@@ -668,6 +669,205 @@ pub fn post_chat_lines(bot_token: &str, chat_id: u64, lines: &[String]) -> Resul
     Ok(())
 }
 
+/// Public HTTPS origin for Telegram `web_app` URLs (`WORLD_MINI_APP_URL`).
+pub fn public_origin() -> Option<String> {
+    std::env::var("WORLD_MINI_APP_URL")
+        .ok()
+        .map(|value| value.trim().trim_end_matches('/').to_string())
+        .filter(|value| !value.is_empty())
+}
+
+fn telegram_deliver_enabled() -> bool {
+    match std::env::var("WORLD_TELEGRAM_DELIVER") {
+        Ok(value) => {
+            let value = value.trim();
+            !(value == "0"
+                || value.eq_ignore_ascii_case("false")
+                || value.eq_ignore_ascii_case("no"))
+        }
+        Err(_) => true,
+    }
+}
+
+pub fn join_public_url(origin: &str, path: &str) -> String {
+    let origin = origin.trim().trim_end_matches('/');
+    let path = path.trim();
+    if path.is_empty() || path == "/" {
+        format!("{origin}/")
+    } else if path.starts_with('/') {
+        format!("{origin}{path}")
+    } else {
+        format!("{origin}/{path}")
+    }
+}
+
+/// Host chrome for `b` / `p`. Empty for other lookup tokens.
+pub fn lookup_chrome(token: &str) -> Option<Value> {
+    match token {
+        "b" | "p" => Some(json!({
+            "controls": [{ "label": "View portfolio", "action": "mini_app.portfolio" }],
+            "mini_app": {
+                "kind": "portfolio",
+                "path": "/",
+                "startapp": ""
+            }
+        })),
+        _ => None,
+    }
+}
+
+pub fn attach_lookup_chrome(token: &str, payload: &mut Value) {
+    let Some(chrome) = lookup_chrome(token) else {
+        return;
+    };
+    let Some(obj) = payload.as_object_mut() else {
+        return;
+    };
+    if let Some(controls) = chrome.get("controls") {
+        obj.insert("controls".into(), controls.clone());
+    }
+    if let Some(mini_app) = chrome.get("mini_app") {
+        obj.insert("mini_app".into(), mini_app.clone());
+    }
+}
+
+fn web_app_keyboard(label: &str, url: &str) -> Value {
+    json!({
+        "inline_keyboard": [[{
+            "text": label,
+            "web_app": { "url": url }
+        }]]
+    })
+}
+
+/// Best-effort inline Mini App button. No-op without token, chat, and origin.
+pub fn post_web_app_button(
+    bot_token: &str,
+    chat_id: u64,
+    text: &str,
+    label: &str,
+    path: &str,
+) -> Result<(), String> {
+    post_web_app_button_at(
+        bot_token,
+        chat_id,
+        text,
+        label,
+        path,
+        public_origin().as_deref(),
+    )
+}
+
+pub fn post_web_app_button_at(
+    bot_token: &str,
+    chat_id: u64,
+    text: &str,
+    label: &str,
+    path: &str,
+    origin: Option<&str>,
+) -> Result<(), String> {
+    if !telegram_deliver_enabled() {
+        return Ok(());
+    }
+    let Some(origin) = origin.map(str::trim).filter(|value| !value.is_empty()) else {
+        return Ok(());
+    };
+    if bot_token.is_empty() || chat_id == 0 {
+        return Ok(());
+    }
+    let url = join_public_url(origin, path);
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(8))
+        .build()
+        .map_err(|err| err.to_string())?;
+    let endpoint = format!("https://api.telegram.org/bot{bot_token}/sendMessage");
+    let response = client
+        .post(&endpoint)
+        .json(&json!({
+            "chat_id": chat_id,
+            "text": text,
+            "disable_notification": true,
+            "reply_markup": web_app_keyboard(label, &url)
+        }))
+        .send()
+        .map_err(|err| err.to_string())?;
+    if !response.status().is_success() {
+        return Err(format!("telegram sendMessage {}", response.status()));
+    }
+    Ok(())
+}
+
+/// Best-effort chart PNG + Open chart Mini App button.
+pub fn post_chart_photo(
+    bot_token: &str,
+    chat_id: u64,
+    image_path: &str,
+    caption: &str,
+    web_path: &str,
+) -> Result<(), String> {
+    post_chart_photo_at(
+        bot_token,
+        chat_id,
+        image_path,
+        caption,
+        web_path,
+        public_origin().as_deref(),
+    )
+}
+
+pub fn post_chart_photo_at(
+    bot_token: &str,
+    chat_id: u64,
+    image_path: &str,
+    caption: &str,
+    web_path: &str,
+    origin: Option<&str>,
+) -> Result<(), String> {
+    if !telegram_deliver_enabled() {
+        return Ok(());
+    }
+    let Some(origin) = origin.map(str::trim).filter(|value| !value.is_empty()) else {
+        return Ok(());
+    };
+    if bot_token.is_empty() || chat_id == 0 {
+        return Ok(());
+    }
+    let path = Path::new(image_path);
+    if !path.is_file() {
+        return post_web_app_button_at(
+            bot_token,
+            chat_id,
+            caption,
+            "Open chart",
+            web_path,
+            Some(origin),
+        );
+    }
+    let url = join_public_url(origin, web_path);
+    let client = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(12))
+        .build()
+        .map_err(|err| err.to_string())?;
+    let endpoint = format!("https://api.telegram.org/bot{bot_token}/sendPhoto");
+    let markup = web_app_keyboard("Open chart", &url).to_string();
+    let form = reqwest::blocking::multipart::Form::new()
+        .text("chat_id", chat_id.to_string())
+        .text("caption", caption.to_string())
+        .text("disable_notification", "true")
+        .text("reply_markup", markup)
+        .file("photo", path)
+        .map_err(|err| err.to_string())?;
+    let response = client
+        .post(&endpoint)
+        .multipart(form)
+        .send()
+        .map_err(|err| err.to_string())?;
+    if !response.status().is_success() {
+        return Err(format!("telegram sendPhoto {}", response.status()));
+    }
+    Ok(())
+}
+
 /// Prepare M10 for Telegram.WebApp.shareMessage. Mutates nothing the Mini App
 /// displays. Falls back to a bot-chat deep link when savePreparedInlineMessage
 /// is unavailable.
@@ -1037,6 +1237,37 @@ mod tests {
         .unwrap();
         assert_eq!(json["liquidation_score"], 3);
         assert!(json.get("score").is_none());
+    }
+
+    #[test]
+    fn attach_lookup_chrome_writes_portfolio_fields() {
+        let mut payload = json!({ "token": "b", "message": "Portfolio `1`." });
+        attach_lookup_chrome("b", &mut payload);
+        assert_eq!(payload["controls"][0]["action"], "mini_app.portfolio");
+        attach_lookup_chrome("d", &mut payload);
+        assert_eq!(payload["controls"][0]["action"], "mini_app.portfolio");
+    }
+
+    #[test]
+    fn join_public_url_normalizes_origin() {
+        assert_eq!(
+            join_public_url("https://mini.example", "/"),
+            "https://mini.example/"
+        );
+        assert_eq!(
+            join_public_url("https://mini.example/", "chart?symbol=AAPL&period=d"),
+            "https://mini.example/chart?symbol=AAPL&period=d"
+        );
+    }
+
+    #[test]
+    fn lookup_chrome_only_on_portfolio_tokens() {
+        let chrome = lookup_chrome("b").expect("b chrome");
+        assert_eq!(chrome["controls"][0]["label"], "View portfolio");
+        assert_eq!(chrome["mini_app"]["kind"], "portfolio");
+        assert!(lookup_chrome("p").is_some());
+        assert!(lookup_chrome("d").is_none());
+        assert!(lookup_chrome("index").is_none());
     }
 
     #[test]
