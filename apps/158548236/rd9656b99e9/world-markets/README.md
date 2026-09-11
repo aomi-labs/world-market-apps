@@ -169,6 +169,11 @@ Options: `dev-full.sh --no-open`, `--no-cli`, `--no-sidecar`, `--help`.
 
 ## Deploy
 
+This app requires Aomi SDK 5.0.0 in both `Cargo.toml` and `Cargo.lock`.
+Its hosted instructions use the SDK 5 skill catalog; each entry must pass the
+4,000-token validation limit. `cargo test --workspace --locked` checks all
+skills and every provider-facing tool schema before publication.
+
 An owner or repository administrator must first open the
 [World Markets staging import page](https://build-staging.aomi.dev/operate/deployments/new?platform=world-market-apps&mode=import),
 confirm the `world-market-apps` platform, and connect `World-Markets-Inc/aomi`.
