@@ -100,11 +100,6 @@ impl RpcCache {
         );
     }
 
-    fn invalidate_volatile(&mut self) {
-        self.entries
-            .retain(|key, _| key.contains("bulkReadTokenConfigs"));
-    }
-
     fn record_post(&mut self, method: &str, ms: u128) {
         self.stats.posts += 1;
         self.stats.post_ms = self.stats.post_ms.saturating_add(ms as u64);
@@ -174,11 +169,6 @@ impl RpcTransport {
         self.lock().stats.clone()
     }
 
-    /// Drop cached account/mark/block reads. Token configs stay.
-    pub(crate) fn invalidate_volatile(&self) {
-        self.lock().invalidate_volatile();
-    }
-
     pub(crate) fn cached_value(
         &self,
         key: &str,
@@ -222,7 +212,7 @@ impl RpcTransport {
         let fetched = self.post_batch(&pending)?;
         {
             let mut cache = self.lock();
-            for ((i, _), value) in pending.iter().zip(fetched.into_iter()) {
+            for ((i, _), value) in pending.iter().zip(fetched) {
                 let (key, method, ttl, _) = &items[*i];
                 match extract_result(method, value) {
                     Ok(result) => {
@@ -471,49 +461,5 @@ mod tests {
         );
         assert_eq!(ttl_for_signature("getBalance(uint64,uint32)"), DEFAULT_TTL);
         assert_eq!(DEFAULT_TTL, Duration::from_secs(60));
-    }
-
-    #[test]
-    fn invalidate_volatile_keeps_token_configs() {
-        let executor = Arc::new(CountingExecutor {
-            posts: AtomicU64::new(0),
-            result: json!("0x1"),
-        });
-        let transport = RpcTransport::with_executor(executor.clone());
-        let block = jsonrpc(1, "eth_blockNumber", json!([]));
-        let configs = jsonrpc(2, "eth_call", json!([]));
-        transport
-            .cached_value(
-                "eth_blockNumber",
-                "eth_blockNumber",
-                DEFAULT_TTL,
-                block.clone(),
-            )
-            .unwrap();
-        transport
-            .cached_value(
-                "eth_call:0xabc:bulkReadTokenConfigs",
-                "bulkReadTokenConfigs_3423260018()",
-                TOKEN_CONFIG_TTL,
-                configs.clone(),
-            )
-            .unwrap();
-        transport.invalidate_volatile();
-        transport
-            .cached_value("eth_blockNumber", "eth_blockNumber", DEFAULT_TTL, block)
-            .unwrap();
-        transport
-            .cached_value(
-                "eth_call:0xabc:bulkReadTokenConfigs",
-                "bulkReadTokenConfigs_3423260018()",
-                TOKEN_CONFIG_TTL,
-                configs,
-            )
-            .unwrap();
-        assert_eq!(
-            executor.posts.load(Ordering::SeqCst),
-            3,
-            "block must refetch; token configs must remain cached"
-        );
     }
 }
