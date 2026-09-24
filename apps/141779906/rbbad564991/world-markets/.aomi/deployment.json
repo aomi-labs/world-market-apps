@@ -1,0 +1,634 @@
+{
+  "id": "dep_141779906_rbbad564991_8c0cbc728987",
+  "status": "",
+  "sdk_version": "5.1.1",
+  "deployed_at": 1790237477,
+  "source": {
+    "project_id": 1646,
+    "installation_id": 141779906,
+    "repository_id": 1316599490,
+    "repository_link": "ceciliaz030/world-markets-agent",
+    "ref": "8c0cbc72898792077c8fd47b3299fd3aad551341",
+    "commit_hash": "8c0cbc72898792077c8fd47b3299fd3aad551341",
+    "applications": [
+      "aomi.toml"
+    ]
+  },
+  "platform": {
+    "platform": "world-market-apps",
+    "repository": "aomi-labs/world-market-apps",
+    "deploy_branch": "publish",
+    "platform_branch": "ceciliaz030/world-markets-agent/141779906/8c0cbc728987",
+    "commit_hash": null,
+    "pr_number": null,
+    "pr_url": null,
+    "ci_status": null,
+    "ci_url": null,
+    "apps": [
+      {
+        "name": "world-markets",
+        "path": "apps/141779906/rbbad564991/world-markets",
+        "aomi_toml_path": "aomi.toml",
+        "release_tag": "apps-141779906-rbbad564991-world-markets-8c0cbc728987",
+        "sdk_version": "5.1.1",
+        "target": "x86_64-unknown-linux-gnu",
+        "label": "World Markets Agent",
+        "is_public": true,
+        "handover": "wallet",
+        "files": [
+          {
+            "path": ".aomi/config.json",
+            "sha256": "sha256:cfe3480ddca82efd95ec11674db37aebf901b508dd4c79ec9f318940f4ae4818",
+            "bytes": 95
+          },
+          {
+            "path": ".env.example",
+            "sha256": "sha256:75824c7bb1f688e800cfc6abf622011b9209985b78e12bfa338050a96a320008",
+            "bytes": 1600
+          },
+          {
+            "path": ".github/workflows/ci.yml",
+            "sha256": "sha256:4dc9aadc9f983c8e398d1cab9fbb5bd9e34f2b5f3b0ed20b11d82ab91963fcfb",
+            "bytes": 970
+          },
+          {
+            "path": ".gitignore",
+            "sha256": "sha256:bded05965ab853120abeb6f32600f2c8e5c1e214772bb0f1d4df94659602e320",
+            "bytes": 261
+          },
+          {
+            "path": "Cargo.lock",
+            "sha256": "sha256:308827b1d9a1598ee4a3434cdea4fab07a590cd1cae8e810c609038d92579189",
+            "bytes": 84043
+          },
+          {
+            "path": "Cargo.toml",
+            "sha256": "sha256:90761d73ab9872acd5d61eb08f859b88d963b7386fa6485110ae24470b77b386",
+            "bytes": 575
+          },
+          {
+            "path": "README.md",
+            "sha256": "sha256:7f441fdd5c8b92b04235bb819fcb696da5c47c955896e5984df85146d159e9aa",
+            "bytes": 6232
+          },
+          {
+            "path": "aomi.toml",
+            "sha256": "sha256:e7b1765532b1c7075b1340314c10822fe569e17946b5478279111108921b1fd3",
+            "bytes": 100
+          },
+          {
+            "path": "docs/FUTURE-WORK.md",
+            "sha256": "sha256:ba781c2871b9d8fc363a7336eaab10374ee202b0afe9ab2352f1c522bc2309c2",
+            "bytes": 12371
+          },
+          {
+            "path": "docs/images/aomi-build-connect.jpg",
+            "sha256": "sha256:4ae8b715f4333e489e7af210e01b5908aec860b2741d3448082e7e1abbf1f1a6",
+            "bytes": 46152
+          },
+          {
+            "path": "mini-app/.dockerignore",
+            "sha256": "sha256:42aa57402d6bc879b893ad80c0ff76e6b882d6f29a3f27709832630833d11fef",
+            "bytes": 105
+          },
+          {
+            "path": "mini-app/.env.example",
+            "sha256": "sha256:c3be6faec34c207b33f313d518a49cac378f5ac4d32545d7edc045c66a14aea2",
+            "bytes": 503
+          },
+          {
+            "path": "mini-app/.gitignore",
+            "sha256": "sha256:3c7744359428aa327ff420df9d9c80c5ab3000b4ffc8064ad644cc76364a2e95",
+            "bytes": 101
+          },
+          {
+            "path": "mini-app/README.md",
+            "sha256": "sha256:f094167368d52270e55a7f136b916a14b3f176407885bfc3de2acff3c1627d1b",
+            "bytes": 2845
+          },
+          {
+            "path": "mini-app/apps/web/AGENTS.md",
+            "sha256": "sha256:63f2c50380ed6303237cce215ce27af1d620d094c215e28d1b1538a3c070e3bb",
+            "bytes": 678
+          },
+          {
+            "path": "mini-app/apps/web/CLAUDE.md",
+            "sha256": "sha256:336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49",
+            "bytes": 11
+          },
+          {
+            "path": "mini-app/apps/web/app/api/t/[tenant]/chart/route.ts",
+            "sha256": "sha256:d04a4b22ce3688b993b53704f92c880dea648e84442717f081abad0a7525b12c",
+            "bytes": 607
+          },
+          {
+            "path": "mini-app/apps/web/app/api/t/[tenant]/ledger/route.ts",
+            "sha256": "sha256:60675e5184624ac627abb71f0ebf3ea1a840c02eec8fa319c05a02cd790539a3",
+            "bytes": 539
+          },
+          {
+            "path": "mini-app/apps/web/app/api/t/[tenant]/portfolio/route.ts",
+            "sha256": "sha256:88d146577730c4b96de7375e7b4e1d5e30a166b280d4c6866cc505ce680fed43",
+            "bytes": 449
+          },
+          {
+            "path": "mini-app/apps/web/app/api/t/[tenant]/products/route.ts",
+            "sha256": "sha256:e5f7ee5dcdb1a4d9c6eac4bfdbcf4a8c47e6792b97eb7c4ac73ae53558176deb",
+            "bytes": 147
+          },
+          {
+            "path": "mini-app/apps/web/app/api/t/[tenant]/summary/route.ts",
+            "sha256": "sha256:c87c313599b51a67172d3867a39a6cfac6f74fcf34c66c9c1bf48ea2485db37a",
+            "bytes": 169
+          },
+          {
+            "path": "mini-app/apps/web/app/globals.css",
+            "sha256": "sha256:5fd12ab4ff2db96fa4783f658127f32a70e39e4f085cfc82666aac268b328ad1",
+            "bytes": 7359
+          },
+          {
+            "path": "mini-app/apps/web/app/layout.tsx",
+            "sha256": "sha256:e90ea9012771b3aae132a168a85d901564f8a7c1a1d9fa3a1f1f39fa883deb82",
+            "bytes": 408
+          },
+          {
+            "path": "mini-app/apps/web/app/mini-app/[command]/route.ts",
+            "sha256": "sha256:9673cda1022f7c69b6ff01a6c9c9f30ed2e1cb0827b8d0d49500f8d917ecee10",
+            "bytes": 1211
+          },
+          {
+            "path": "mini-app/apps/web/app/mini-app/route.ts",
+            "sha256": "sha256:e3b5d016e70a248f1afbdb137132144df9785630ec0e058b1c1333e703e427a2",
+            "bytes": 161
+          },
+          {
+            "path": "mini-app/apps/web/app/page.tsx",
+            "sha256": "sha256:fa9b7d747db1b785fd943223a9827b7da377829a17c7667b90b397359a0d5163",
+            "bytes": 190
+          },
+          {
+            "path": "mini-app/apps/web/app/t/[tenant]/chart/page.tsx",
+            "sha256": "sha256:55d8cda06e7378bd39d6bcb55a403562ffc3ce0172181c683bd03e568e104e99",
+            "bytes": 1894
+          },
+          {
+            "path": "mini-app/apps/web/app/t/[tenant]/ledger/page.tsx",
+            "sha256": "sha256:b0554fe93962d2188398ab268381f98ba2f4ec003d94b92dfd622623a0bfc43c",
+            "bytes": 2491
+          },
+          {
+            "path": "mini-app/apps/web/app/t/[tenant]/page.tsx",
+            "sha256": "sha256:f8d4f42fb02b48d505e26703cdc194225434bef7d5ce949fa9ff7e2fc3838a17",
+            "bytes": 1702
+          },
+          {
+            "path": "mini-app/apps/web/app/t/[tenant]/portfolio/page.tsx",
+            "sha256": "sha256:402b7d1e471d4aca7d4bc958228ef82d373af90a2b5d9e0ebc604896e9f3291f",
+            "bytes": 3544
+          },
+          {
+            "path": "mini-app/apps/web/app/t/[tenant]/products/page.tsx",
+            "sha256": "sha256:6386befeb2fb779b4221766132c54b7ce1fa39c20408a6b6e98759c46ee6a400",
+            "bytes": 2742
+          },
+          {
+            "path": "mini-app/apps/web/app/telegram.d.ts",
+            "sha256": "sha256:0098bca580783eef6b177b66627f5b788de8633258994b6399ca450ef27238ee",
+            "bytes": 689
+          },
+          {
+            "path": "mini-app/apps/web/app/world-fonts.css",
+            "sha256": "sha256:27b545502d95ea55777d0ad31d6e5ed7f134f9c54f20b2cd9c6e836a3ac0ac5f",
+            "bytes": 123846
+          },
+          {
+            "path": "mini-app/apps/web/components/Candles.tsx",
+            "sha256": "sha256:69dfec9ece12278f13ac357d5847624d1444abddbf27472924c0af6e1469527b",
+            "bytes": 2134
+          },
+          {
+            "path": "mini-app/apps/web/components/Shell.tsx",
+            "sha256": "sha256:94f1b7df981b2f1b69c77863b644efeedb57745e345d656d1a386b9aa2559371",
+            "bytes": 1560
+          },
+          {
+            "path": "mini-app/apps/web/components/TelegramScript.tsx",
+            "sha256": "sha256:cc03bf4b57b3a844f5562735c6dac07d5adf558911b5c4ac6b028ce86a0fabdb",
+            "bytes": 367
+          },
+          {
+            "path": "mini-app/apps/web/components/Unmapped.tsx",
+            "sha256": "sha256:91ed30a3bbb1a784b9098b52ee9bfbc23f6816611ec7306b80921a3ce7b05224",
+            "bytes": 329
+          },
+          {
+            "path": "mini-app/apps/web/components/WorldLogo.tsx",
+            "sha256": "sha256:3ce56e8c8db2fe89eb724e11e512984502ac102fdb1e6dad7096356aa7ca7522",
+            "bytes": 996
+          },
+          {
+            "path": "mini-app/apps/web/lib/api.ts",
+            "sha256": "sha256:4655d628a2c4dec53c1418b04ff54a6665655b37b9f6db53d4b3cdcce652ee1a",
+            "bytes": 2876
+          },
+          {
+            "path": "mini-app/apps/web/lib/auth.ts",
+            "sha256": "sha256:f8a7f8add0c4b06e3076fb8a2412ed5f1a302d04ce712b1b1d29abdaaf5cfead",
+            "bytes": 4784
+          },
+          {
+            "path": "mini-app/apps/web/lib/format.ts",
+            "sha256": "sha256:99118d64ef68d79a22bc0c01991c5fbb68ce20dfe7edd609368e2705d0ce44f8",
+            "bytes": 1287
+          },
+          {
+            "path": "mini-app/apps/web/lib/server.ts",
+            "sha256": "sha256:72e8bd035c64247dc2c106cce372bedae730779d1c44a5f0056b3d7343f31f08",
+            "bytes": 192
+          },
+          {
+            "path": "mini-app/apps/web/lib/summary.ts",
+            "sha256": "sha256:097978dff244ed4da4c8d159005c7e66dc3922b6352e79d6e9d0cd55777f26b0",
+            "bytes": 978
+          },
+          {
+            "path": "mini-app/apps/web/lib/tenant-command.ts",
+            "sha256": "sha256:dc7e2cfbf7ef62830fad687179c867c4dbcb48a316815a1b12df336a0c1eae89",
+            "bytes": 3868
+          },
+          {
+            "path": "mini-app/apps/web/lib/tg.ts",
+            "sha256": "sha256:106c88435c6ab3aafd536809257e0c85f16c2fce297c9956d75e10d2ff2f3388",
+            "bytes": 1388
+          },
+          {
+            "path": "mini-app/apps/web/next-env.d.ts",
+            "sha256": "sha256:532b8257fa60400ff991ec1a687329a96d23d0d1b9a324c8beb10b519adecff7",
+            "bytes": 310
+          },
+          {
+            "path": "mini-app/apps/web/next.config.ts",
+            "sha256": "sha256:ef0fce3d68ca61c5b15274f0c7ccf2fae07cf08da8363755e6c72bcb4ed1e9b5",
+            "bytes": 821
+          },
+          {
+            "path": "mini-app/apps/web/package.json",
+            "sha256": "sha256:49bc64013e0e05d7db254ddf3d518ee9807ae934add69b8574416a0a210f7ef4",
+            "bytes": 603
+          },
+          {
+            "path": "mini-app/apps/web/test/api.test.ts",
+            "sha256": "sha256:51a716869a0deccd24505a31fcb36bb9ead873d617f7c89c655efffffc6ed581",
+            "bytes": 3094
+          },
+          {
+            "path": "mini-app/apps/web/test/auth.test.ts",
+            "sha256": "sha256:13260a69d04e088b3f43b38c96a4c07ae45480a80f1bd4281fcd1e100d3df5e3",
+            "bytes": 2779
+          },
+          {
+            "path": "mini-app/apps/web/test/tenant-command.test.ts",
+            "sha256": "sha256:c14d759103f2d269f9f775280cdb4c620771a5ba2c1d2c92a35a1b9573b0bfba",
+            "bytes": 2915
+          },
+          {
+            "path": "mini-app/apps/web/test/tg.test.ts",
+            "sha256": "sha256:2ddebf09380238be46d6cc08fb3fe2c0ce249883327a565c442708a92fcf1b98",
+            "bytes": 1267
+          },
+          {
+            "path": "mini-app/apps/web/tsconfig.json",
+            "sha256": "sha256:e4cef2be4682cfe07db667f16b7e16f5480c37f3a608fc7cdc3ca57a22486204",
+            "bytes": 932
+          },
+          {
+            "path": "mini-app/docs/HANDOVER.md",
+            "sha256": "sha256:6772d68089deba3638d1886eeb60bc5e1f44ffb01454dcfa3ad4308d19624bf9",
+            "bytes": 8603
+          },
+          {
+            "path": "mini-app/docs/deploy.md",
+            "sha256": "sha256:e024bd9fec092c2b38682bbe8d624cabacfcb08afb66ecedb5a4db8b45955fd9",
+            "bytes": 2262
+          },
+          {
+            "path": "mini-app/docs/partner-onboarding.md",
+            "sha256": "sha256:d3aa18cf860bdd2eff22e9bb5eb9a450b9cd33d996ae6f47e68e861be7ef1843",
+            "bytes": 1010
+          },
+          {
+            "path": "mini-app/docs/world-e2e-verification.md",
+            "sha256": "sha256:a4bf1c26fbdefbbccf652eaf3c9aa4751ff3b0b81590f88434b83a2133588cc7",
+            "bytes": 3163
+          },
+          {
+            "path": "mini-app/package.json",
+            "sha256": "sha256:4a0e07d2d3c3e5cbe85112e3ab6c8f20740104d99319fb434473c54f03373100",
+            "bytes": 383
+          },
+          {
+            "path": "mini-app/packages/core/package.json",
+            "sha256": "sha256:f1e1fc11ecb681f651b2f48c90fba97f1812ef7330da5ef2516de38b8b53d5c6",
+            "bytes": 270
+          },
+          {
+            "path": "mini-app/packages/core/src/budget.ts",
+            "sha256": "sha256:779a144b335a0dafa247f4836b36626198f9f01b034a90021d6d63acb964146d",
+            "bytes": 916
+          },
+          {
+            "path": "mini-app/packages/core/src/index.ts",
+            "sha256": "sha256:2a5b6c01bd12568c7d9b9881b1de93268d8826667aa92598352335a366c005e1",
+            "bytes": 162
+          },
+          {
+            "path": "mini-app/packages/core/src/net.ts",
+            "sha256": "sha256:e23ef143f1f813450dd19c207028eb2b9d072618c6d6637deb73467f7e35c66f",
+            "bytes": 668
+          },
+          {
+            "path": "mini-app/packages/core/src/telegram/init-data.ts",
+            "sha256": "sha256:9495abf5c2625f737dc31dae8a4bf02329526f1380a8fcd7e0fe29db19f4e9c0",
+            "bytes": 3219
+          },
+          {
+            "path": "mini-app/packages/core/src/telegram/links.ts",
+            "sha256": "sha256:bc3ea8ca073913c32f38d8fd1787ad9ae7983263cb479ad82102eb5c167e7087",
+            "bytes": 1013
+          },
+          {
+            "path": "mini-app/packages/core/src/tenant.ts",
+            "sha256": "sha256:a7d9f13d9c83eb4e1b560962171abf4370ef7bb407201a6f599f59ecbb0117cb",
+            "bytes": 4703
+          },
+          {
+            "path": "mini-app/packages/core/test/budget.test.ts",
+            "sha256": "sha256:49efc7d39bafefb3d4bd47be04b50fe75357b8638fc3d9283dcb5cba2f5adcba",
+            "bytes": 701
+          },
+          {
+            "path": "mini-app/packages/core/test/init-data.test.ts",
+            "sha256": "sha256:ee76143d03b6dfb3704ded2391446321a1bda6216737c83c4066ea159d5f5171",
+            "bytes": 1663
+          },
+          {
+            "path": "mini-app/packages/core/tsconfig.json",
+            "sha256": "sha256:120ffe985f5d26643232621c4cfe9bae0aae1dcfa2dbaa68dc804c02dda93d9a",
+            "bytes": 153
+          },
+          {
+            "path": "mini-app/packages/core/vitest.config.ts",
+            "sha256": "sha256:0be6a110349188c59f6651c3e6cc19543b37c18cb1d8b9c4d40666709122798e",
+            "bytes": 121
+          },
+          {
+            "path": "mini-app/pnpm-lock.yaml",
+            "sha256": "sha256:b300ddadb20cb2f2044fccc35c6820f3a8d090f0470d50ef61358df5afae1fe9",
+            "bytes": 59343
+          },
+          {
+            "path": "mini-app/pnpm-workspace.yaml",
+            "sha256": "sha256:37000834d164b964300f3653dd13f30b1652728932eb102df4e0e1212a756f09",
+            "bytes": 114
+          },
+          {
+            "path": "mini-app/tenants/world/abi/ILendOrderBook.abi.json",
+            "sha256": "sha256:54f7a11cf4a149eb3e562267e3aeff0756c58e75792b056bbc959516ae547059",
+            "bytes": 5862
+          },
+          {
+            "path": "mini-app/tenants/world/abi/ISpotOrderBook.abi.json",
+            "sha256": "sha256:9a6c74dcbf2d18c681e68281b8fbbad1299f682d0f5fce9d2f907950937782b0",
+            "bytes": 6178
+          },
+          {
+            "path": "mini-app/tenants/world/abi/PerpOrderBook.abi.json",
+            "sha256": "sha256:4a66a0fb4b0bb7d4892841eaa35c59055bc464a0517137cdf8e7f984510e9b95",
+            "bytes": 9951
+          },
+          {
+            "path": "mini-app/tenants/world/package.json",
+            "sha256": "sha256:4f54d03f4c0a72200864596776bf1dd28f86b405f64006716e6a40a0890c1faf",
+            "bytes": 444
+          },
+          {
+            "path": "mini-app/tenants/world/src/adapter.ts",
+            "sha256": "sha256:249685595edc4227f8c53c90c32b753dbc528853565a06a944aa3f19d083b47b",
+            "bytes": 3296
+          },
+          {
+            "path": "mini-app/tenants/world/src/commands.ts",
+            "sha256": "sha256:a9b640a1fc92c8a215016f072a2a47368c619c2f4c240550e6a29e5d1ccb3656",
+            "bytes": 3363
+          },
+          {
+            "path": "mini-app/tenants/world/src/index.ts",
+            "sha256": "sha256:5362d26c3df1cdcafd5fe4da200f7e88632e779430a0611305810352eb20b7f8",
+            "bytes": 2277
+          },
+          {
+            "path": "mini-app/tenants/world/src/lookups.ts",
+            "sha256": "sha256:2dfd41ea542dc7ea743a831f4e18b1e038a52f264b000358c5ea3a019b53fff0",
+            "bytes": 3309
+          },
+          {
+            "path": "mini-app/tenants/world/src/money.ts",
+            "sha256": "sha256:33571a9d3fb76c87a5bac09c92a1e292304f1d34ccedc8620a5087f172b9097f",
+            "bytes": 1311
+          },
+          {
+            "path": "mini-app/tenants/world/src/net.ts",
+            "sha256": "sha256:f2c401b565e1686bf12aa21c6538f597e497b5c9058a6fd4af6371839c4107a8",
+            "bytes": 69
+          },
+          {
+            "path": "mini-app/tenants/world/src/snapshot.ts",
+            "sha256": "sha256:34c758ce3882ff1fde7805b9b973076201be0e90a64ce97ab8061a767af97dd7",
+            "bytes": 2111
+          },
+          {
+            "path": "mini-app/tenants/world/src/venue.ts",
+            "sha256": "sha256:969a146af6d0696cae7f7e3f5803e7d252a04ab9a10eabb335742215a7f5c455",
+            "bytes": 15574
+          },
+          {
+            "path": "mini-app/tenants/world/test/adapter.test.ts",
+            "sha256": "sha256:d6a7ea0290aefece2fb4b6f5c9e1155c88a5bb5013771010fd778cb145eb46c0",
+            "bytes": 3282
+          },
+          {
+            "path": "mini-app/tenants/world/test/fixtures.ts",
+            "sha256": "sha256:4269edd2ad657ecb47e5f40491c5d2e73cddb41d1cfbfc7af1f4991889148666",
+            "bytes": 1566
+          },
+          {
+            "path": "mini-app/tenants/world/test/live.test.ts",
+            "sha256": "sha256:6e464a187acb0753007734e6e64f8dc9fb393699a8ceab22ebc538f1aecc2cb4",
+            "bytes": 1424
+          },
+          {
+            "path": "mini-app/tenants/world/test/lookups.test.ts",
+            "sha256": "sha256:a203523b146eba724c19ccce846a26b665011ae47e299912b6c269d8da90acc4",
+            "bytes": 2747
+          },
+          {
+            "path": "mini-app/tenants/world/test/unmapped.test.ts",
+            "sha256": "sha256:3228b3f838b84cb69c71135a220bb8c42be025938c593693bbd7d1c692d41bc7",
+            "bytes": 770
+          },
+          {
+            "path": "mini-app/tenants/world/tsconfig.json",
+            "sha256": "sha256:722ffd510b5f1eda917d8b631186a10bdefcc77c61bb4edc96e1a2a97f084b99",
+            "bytes": 141
+          },
+          {
+            "path": "mini-app/tenants/world/vitest.config.ts",
+            "sha256": "sha256:b56bf18391f7cb5db98ba6140454ba6d29265ee1f95bdee24c79eb4b3f008635",
+            "bytes": 259
+          },
+          {
+            "path": "mini-app/tsconfig.base.json",
+            "sha256": "sha256:d8595c22b55b985e1d9f886dde3c8932b7bc6b3c269f2a23dc4e920d58b6c477",
+            "bytes": 469
+          },
+          {
+            "path": "scripts/dev-run.sh",
+            "sha256": "sha256:31733f7a3e487f40df234dd50a21cc5e99c528835dfce88e20e3df17bd88c328",
+            "bytes": 585
+          },
+          {
+            "path": "scripts/hosted-chat.sh",
+            "sha256": "sha256:df1f4e91349406f901a8a51de904b598538f8a62f7a9712ac6d4be5f99e3b4d8",
+            "bytes": 7599
+          },
+          {
+            "path": "src/client.rs",
+            "sha256": "sha256:c2425ff3eb3b3a71c7859daa04e0b8762f7ce65cbf7c729955f65bc6af65153c",
+            "bytes": 55614
+          },
+          {
+            "path": "src/lib.rs",
+            "sha256": "sha256:451bfde0aa85fcef95903bb4da5c2772f4f517c8a5e6388e6660f368ecc00fef",
+            "bytes": 15250
+          },
+          {
+            "path": "src/liquidation_risk.rs",
+            "sha256": "sha256:4dd8271b4cf537cdecab4e5ad4d4de927b6da15130295616b7d6b179b7e24656",
+            "bytes": 41666
+          },
+          {
+            "path": "src/loans.rs",
+            "sha256": "sha256:42eb8d24a8f99b41ed5c717c54749273c0f3260c0b3d6787bf80f673f96fe76d",
+            "bytes": 11988
+          },
+          {
+            "path": "src/lookups.rs",
+            "sha256": "sha256:9adebcc972bbe8e8c374b8fc42074501bafed85cd0d0b5d954616cdd9f5dc0c5",
+            "bytes": 20532
+          },
+          {
+            "path": "src/mandate.rs",
+            "sha256": "sha256:d2a7fbe2777509be54d709d180cd59ba03c25d164d1bbb5d5c2751e3d9570edf",
+            "bytes": 20891
+          },
+          {
+            "path": "src/order_intent.rs",
+            "sha256": "sha256:67f559de9cc732824f0ca3e3b037d349a5bff98722286d659d898b51904d118b",
+            "bytes": 4601
+          },
+          {
+            "path": "src/order_word.rs",
+            "sha256": "sha256:cd76e1c62963ccdb9e7b67474802a783511498de5becffd370a4ed66ac05ebc7",
+            "bytes": 10135
+          },
+          {
+            "path": "src/pnl.rs",
+            "sha256": "sha256:f4e7f7fc75aa6fdd260bd691e560580eb17d3a5ff6380919347b2a7f67b60c27",
+            "bytes": 30755
+          },
+          {
+            "path": "src/preamble.rs",
+            "sha256": "sha256:c9a61a15fc2070e780e2736adb8b7b590a6c73f46314ada0b6aaa7262f5fad0e",
+            "bytes": 2698
+          },
+          {
+            "path": "src/rates.rs",
+            "sha256": "sha256:8bab9019b932cc2534a1c547969fbc78d43b65ddb14291ed5e9a9324be97b9fd",
+            "bytes": 9401
+          },
+          {
+            "path": "src/reporting.rs",
+            "sha256": "sha256:02cec549dc582711ab6bd7769b3868bb5b497014cdd03cb5d3b2f03bd2384a72",
+            "bytes": 10416
+          },
+          {
+            "path": "src/rpc.rs",
+            "sha256": "sha256:7a176502833466f623458464f9d44c94a47e816b547c5ba0fa47735b3876e1e5",
+            "bytes": 14813
+          },
+          {
+            "path": "src/size.rs",
+            "sha256": "sha256:e0aa274354f3d27f33b6a23063ddb5ce4835d5c6b9cc854c25f0702222140cbb",
+            "bytes": 19126
+          },
+          {
+            "path": "src/skill/execution.md",
+            "sha256": "sha256:939c17566bdb219b21a10968b356c3c06ec58300725c6f2d58ead265d6177f8c",
+            "bytes": 3108
+          },
+          {
+            "path": "src/skill/guard.json",
+            "sha256": "sha256:e98bdd68e63fe42a198b865f923c6593d2c351b2d62877c43d79605e0e6e7682",
+            "bytes": 1590
+          },
+          {
+            "path": "src/skill/reporting.md",
+            "sha256": "sha256:e58f72f5f006270f3674bd51ff781932f303a17f749f07e97f4578510f1d0994",
+            "bytes": 6019
+          },
+          {
+            "path": "src/skill/safety.md",
+            "sha256": "sha256:4d1aeeee9ddcc733c46d4f3cc005ed5b3979850563f7f81a5924b0d6d6e11a63",
+            "bytes": 955
+          },
+          {
+            "path": "src/skill/trading.md",
+            "sha256": "sha256:6c91c2a9a7947dab6e6ab92e93fcb0c8e95575ed9b98350140d5ab37f09c06e7",
+            "bytes": 6749
+          },
+          {
+            "path": "src/skill/turn-contract.md",
+            "sha256": "sha256:1343dc7cc72a98c26a8b4b554d680f57b4fa31cdef303371e9dc8d925353dcdb",
+            "bytes": 3382
+          },
+          {
+            "path": "src/staging.rs",
+            "sha256": "sha256:5606cbe1785a51b75094a345c943367d747bdf163dbae6fad62191c5f8963c1a",
+            "bytes": 12008
+          },
+          {
+            "path": "src/tool.rs",
+            "sha256": "sha256:58dab9e3df7bba1eed041105ca8c01a0b1b6d29d173aa5a7382c2d40146628c0",
+            "bytes": 79015
+          },
+          {
+            "path": "tests/chat_full_harness.md",
+            "sha256": "sha256:698c097373b4d10988c75828f5bb16cfccd6bddb4b7d49dff6c16ab3a899e54a",
+            "bytes": 21704
+          },
+          {
+            "path": "tests/skill_conformance.rs",
+            "sha256": "sha256:ffb20a331203ecfdbe3a42dc233d9ab9092b8fa50ba2cc4ec53d148a1f0bd7b7",
+            "bytes": 6749
+          },
+          {
+            "path": "tests/skill_invariants.rs",
+            "sha256": "sha256:ce7d79eac0c849b4c0232cc4f58dbbc38d5ae4953b900061047b7ee1f60081a2",
+            "bytes": 1639
+          }
+        ],
+        "secret_slots": []
+      }
+    ]
+  }
+}
