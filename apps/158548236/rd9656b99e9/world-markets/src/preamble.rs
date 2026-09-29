@@ -1,9 +1,6 @@
-//! Composed system prompt for LLM runtimes that read only [`DynManifest::preamble`].
-//!
-//! `aomi-run` (aomi-sdk 4.0.0) does **not** fold `manifest.skill` sections into the
-//! agent prompt — only this string is sent. The hosted Aomi backend composes
-//! skill sections separately, so we keep the `skill = { ... }` block in `lib.rs`
-//! for release validation and staging.
+//! Always-active safety and response contract. Detailed operating instructions
+//! live in SDK 5 skills. The app fragment must leave room within the backend
+//! 32 KB cap for the shared harness, chain context, and model instructions.
 
 const SEP: &str = "\n\n---\n\n";
 
@@ -22,8 +19,8 @@ The turn contract at the end of this prompt is the last word on every message: c
 #[cfg(test)]
 pub(crate) const ROLE_HEADER_FOR_TEST: &str = role_header!();
 
-/// Shared core section names, in compose order, shared by `COMPOSED` and the hosted
-/// `skill = { ... }` list. `turn_contract` is last in both runtimes.
+/// Complete skill section order, including details omitted from `COMPOSED`.
+/// The turn contract remains last in both the preamble and the skill list.
 ///
 /// Allowed differences (documented here so the parity test does not paper over them):
 /// - role header: COMPOSED-only (`ROLE_HEADER`)
@@ -33,6 +30,7 @@ pub(crate) const SHARED_CORE_SECTION_NAMES: &[&str] = &[
     "instructions",
     "lookups",
     "workflows",
+    "workflows_monitoring",
     "action_rules",
     "exemplars",
     "safety",
@@ -46,12 +44,13 @@ pub(crate) const SHARED_CORE_SECTION_NAMES: &[&str] = &[
     "strategy_brain",
 ];
 
-/// Hosted `skill.sections` names in compose order. `turn_contract` is last.
+/// Hosted `skills` section names in compose order. `turn_contract` is last.
 #[cfg(test)]
 pub(crate) const HOSTED_SKILL_SECTION_NAMES: &[&str] = &[
     "instructions",
     "lookups",
     "workflows",
+    "workflows_monitoring",
     "action_rules",
     "exemplars",
     "safety",
@@ -66,40 +65,15 @@ pub(crate) const HOSTED_SKILL_SECTION_NAMES: &[&str] = &[
     "turn_contract",
 ];
 
-/// Full prompt for `aomi-run` and any runtime that skips `manifest.skill`.
+/// Always-active prompt. SDK 5 skill activation supplies detailed workflows.
 ///
-/// Order: role header, shared core (exemplars after action-rules, before safety),
+/// Order: role and skill routing, safety,
 /// guest, share, turn-contract LAST (static recency for the behavioral kernel).
 pub(crate) const COMPOSED: &str = concat!(
     role_header!(),
-    "\n\n---\n\n",
-    include_str!("skill/instructions.md"),
-    "\n\n---\n\n",
-    include_str!("skill/lookups.md"),
-    "\n\n---\n\n",
-    include_str!("skill/workflows.md"),
-    "\n\n---\n\n",
-    include_str!("skill/action-rules.md"),
-    "\n\n---\n\n",
-    include_str!("skill/exemplars.md"),
+    "\n\nBefore any World tool call, activate world-markets/trading and world-markets/reporting to load account rules, lookup dispatch, action rules and response templates. Skill activation precedes the turn contract's first business-tool call. Before handling execution, trade amendments or order management, also activate world-markets/execution. Before watches, health, research, voice or recurring tasks, activate world-markets/monitoring. Before venue, account-model, risk or product explanations, activate world-markets/reference. Follow those instructions before using the relevant tools; never invent an omitted workflow. Safety, guest and share handling, and the turn contract below remain active on every turn. Activate the relevant skills again each serve cycle; never infer omitted rules from memory.",
     "\n\n---\n\n",
     include_str!("skill/safety.md"),
-    "\n\n---\n\n",
-    include_str!("skill/reference/atlas.md"),
-    "\n\n---\n\n",
-    include_str!("skill/reference/products.md"),
-    "\n\n---\n\n",
-    include_str!("skill/reference/account-model.md"),
-    "\n\n---\n\n",
-    include_str!("skill/reference/venue.md"),
-    "\n\n---\n\n",
-    include_str!("skill/reference/dollarpower.md"),
-    "\n\n---\n\n",
-    include_str!("skill/reference/guardian.md"),
-    "\n\n---\n\n",
-    include_str!("skill/reference/notifications.md"),
-    "\n\n---\n\n",
-    include_str!("skill/reference/strategy-brain.md"),
     "\n\n---\n\n",
     include_str!("skill/guest.md"),
     "\n\n---\n\n",
@@ -107,9 +81,6 @@ pub(crate) const COMPOSED: &str = concat!(
     "\n\n---\n\n",
     include_str!("skill/turn-contract.md"),
 );
-
-#[cfg(test)]
-pub(crate) const ROLE_LEN: usize = ROLE_HEADER_FOR_TEST.len();
 
 #[allow(dead_code)]
 const _SEP: &str = SEP;
