@@ -1,0 +1,42 @@
+{
+  "evm": {
+    "contracts": {
+      "EXCHANGE": "0xf6b54e033bb45a583aa642924bcef78b804588ae"
+    },
+    "selectors": {
+      "NEW_SPOT_BUY_ORDER": "newSpotBuyOrder(address,uint256)",
+      "NEW_SPOT_SELL_ORDER": "newSpotSellOrder(address,uint256)",
+      "NEW_PERP_BUY_ORDER": "newPerpBuyOrder(address,uint256)",
+      "NEW_PERP_SELL_ORDER": "newPerpSellOrder(address,uint256)",
+      "NEW_LEND_ORDER": "newLendOrder(address,uint256)",
+      "NEW_BORROW_ORDER": "newBorrowOrder(address,uint256)",
+      "CANCEL_SPOT_BUY_ORDER": "cancelSpotBuyOrder(address,uint256)",
+      "CANCEL_SPOT_SELL_ORDER": "cancelSpotSellOrder(address,uint256)",
+      "CANCEL_PERP_BUY_ORDER": "cancelPerpBuyOrder(address,uint256)",
+      "CANCEL_PERP_SELL_ORDER": "cancelPerpSellOrder(address,uint256)",
+      "CANCEL_LEND_ORDER": "cancelLendOrder(address,uint256)",
+      "CANCEL_BORROW_ORDER": "cancelBorrowOrder(address,uint256)",
+      "RENEW_LOAN": "renewLoan(uint64,uint64,uint64)",
+      "PAY_INTEREST_AND_FEES": "payInterestAndFees(uint64,uint64,bool)"
+    },
+    "allowed_contracts": ["EXCHANGE"],
+    "allowed_selectors": [
+      "NEW_SPOT_BUY_ORDER",
+      "NEW_SPOT_SELL_ORDER",
+      "NEW_PERP_BUY_ORDER",
+      "NEW_PERP_SELL_ORDER",
+      "NEW_LEND_ORDER",
+      "NEW_BORROW_ORDER",
+      "CANCEL_SPOT_BUY_ORDER",
+      "CANCEL_SPOT_SELL_ORDER",
+      "CANCEL_PERP_BUY_ORDER",
+      "CANCEL_PERP_SELL_ORDER",
+      "CANCEL_LEND_ORDER",
+      "CANCEL_BORROW_ORDER",
+      "RENEW_LOAN",
+      "PAY_INTEREST_AND_FEES"
+    ],
+    "approve_spenders": ["EXCHANGE"],
+    "chain_ids": [2092151908]
+  }
+}

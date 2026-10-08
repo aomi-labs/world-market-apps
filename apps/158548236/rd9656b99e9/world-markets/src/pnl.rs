@@ -23,13 +23,36 @@ use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
 use crate::client::{Account, PerpetualPosition, WorldClient};
-use crate::reporting::Figure;
 
 const QUOTE: &str = "USDT";
 const MAX_CLOSED: usize = 50;
 const LEDGER_VERSION: u32 = 1;
 const WINDOW: &str = "position_lifetime";
 const COVERAGE: &str = "perpetual_positions";
+
+/// One reported number with its unit and provenance: whether it is an
+/// estimate (ledger-derived) or an exact contract read. Never a float.
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub(crate) struct Figure {
+    pub(crate) value: String,
+    /// Unit label, e.g. "USDT" or the position symbol.
+    pub(crate) unit: String,
+    pub(crate) is_estimate: bool,
+}
+
+impl Figure {
+    pub(crate) fn exact(value: Decimal, unit: impl Into<String>) -> Self {
+        Self::decimal(value, unit, false)
+    }
+
+    pub(crate) fn decimal(value: Decimal, unit: impl Into<String>, is_estimate: bool) -> Self {
+        Self {
+            value: value.normalize().to_string(),
+            unit: unit.into(),
+            is_estimate,
+        }
+    }
+}
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 pub(crate) struct PersistenceInfo {

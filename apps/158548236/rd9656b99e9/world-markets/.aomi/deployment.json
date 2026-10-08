@@ -1,0 +1,224 @@
+{
+  "id": "dep_158548236_rd9656b99e9_593d15a32dae",
+  "status": "",
+  "sdk_version": "4.0.0",
+  "deployed_at": 1789580775,
+  "source": {
+    "project_id": 1679,
+    "installation_id": 158548236,
+    "repository_id": 1327993321,
+    "repository_link": "world-markets-inc/aomi",
+    "ref": "593d15a32dae225a0d50d1f4255a0244ea32a5c2",
+    "commit_hash": "593d15a32dae225a0d50d1f4255a0244ea32a5c2",
+    "applications": [
+      "aomi.toml"
+    ]
+  },
+  "platform": {
+    "platform": "world-market-apps",
+    "repository": "aomi-labs/world-market-apps",
+    "deploy_branch": "publish",
+    "platform_branch": "world-markets-inc/aomi/158548236/593d15a32dae",
+    "commit_hash": null,
+    "pr_number": null,
+    "pr_url": null,
+    "ci_status": null,
+    "ci_url": null,
+    "apps": [
+      {
+        "name": "world-markets",
+        "path": "apps/158548236/rd9656b99e9/world-markets",
+        "aomi_toml_path": "aomi.toml",
+        "release_tag": "apps-158548236-rd9656b99e9-world-markets-593d15a32dae",
+        "sdk_version": "4.0.0",
+        "target": "x86_64-unknown-linux-gnu",
+        "label": "World Markets Agent",
+        "is_public": true,
+        "handover": "wallet",
+        "files": [
+          {
+            "path": ".aomi/config.json",
+            "sha256": "sha256:cfe3480ddca82efd95ec11674db37aebf901b508dd4c79ec9f318940f4ae4818",
+            "bytes": 95
+          },
+          {
+            "path": ".env.example",
+            "sha256": "sha256:75824c7bb1f688e800cfc6abf622011b9209985b78e12bfa338050a96a320008",
+            "bytes": 1600
+          },
+          {
+            "path": ".github/workflows/ci.yml",
+            "sha256": "sha256:18f92a7c9d9321016ea6315892eb74f98f8fe1680e996bdb19375bab6470f4dd",
+            "bytes": 474
+          },
+          {
+            "path": ".gitignore",
+            "sha256": "sha256:bded05965ab853120abeb6f32600f2c8e5c1e214772bb0f1d4df94659602e320",
+            "bytes": 261
+          },
+          {
+            "path": "Cargo.lock",
+            "sha256": "sha256:c7f4e04bb5d19658267229ad556b5ade4f0dd14bd9c17a01b27d1bfd7e4e7160",
+            "bytes": 84043
+          },
+          {
+            "path": "Cargo.toml",
+            "sha256": "sha256:88c04b3cb06f0c8139f606c660b9327c26ae687050659737e1e60f00e938ae9d",
+            "bytes": 575
+          },
+          {
+            "path": "README.md",
+            "sha256": "sha256:396f41601aeb72356e3a2587628332acefadccee97f98acf6518763346923446",
+            "bytes": 5073
+          },
+          {
+            "path": "aomi.toml",
+            "sha256": "sha256:e7b1765532b1c7075b1340314c10822fe569e17946b5478279111108921b1fd3",
+            "bytes": 100
+          },
+          {
+            "path": "docs/FUTURE-WORK.md",
+            "sha256": "sha256:ba781c2871b9d8fc363a7336eaab10374ee202b0afe9ab2352f1c522bc2309c2",
+            "bytes": 12371
+          },
+          {
+            "path": "docs/images/aomi-build-connect.jpg",
+            "sha256": "sha256:4ae8b715f4333e489e7af210e01b5908aec860b2741d3448082e7e1abbf1f1a6",
+            "bytes": 46152
+          },
+          {
+            "path": "scripts/dev-run.sh",
+            "sha256": "sha256:31733f7a3e487f40df234dd50a21cc5e99c528835dfce88e20e3df17bd88c328",
+            "bytes": 585
+          },
+          {
+            "path": "scripts/hosted-chat.sh",
+            "sha256": "sha256:df1f4e91349406f901a8a51de904b598538f8a62f7a9712ac6d4be5f99e3b4d8",
+            "bytes": 7599
+          },
+          {
+            "path": "src/book.rs",
+            "sha256": "sha256:1c155f8d39d1ae22f19571ca0e0bf5adf0df38c7c53ac6e178b223875ac2ce53",
+            "bytes": 2404
+          },
+          {
+            "path": "src/client.rs",
+            "sha256": "sha256:74dd2295b93c998f64a2862cd2212cc70b66f0abdae293c028e9e7cb78e7adbe",
+            "bytes": 54004
+          },
+          {
+            "path": "src/lib.rs",
+            "sha256": "sha256:052f7f0afee613dccffd6bd88b8489a5b83c0bf74ba9fe93be600e1387bebaf8",
+            "bytes": 15152
+          },
+          {
+            "path": "src/liquidation_risk.rs",
+            "sha256": "sha256:2e782ddf3074018496143e670304840c21ab471a6ebd2a7779c76a200cd41086",
+            "bytes": 41397
+          },
+          {
+            "path": "src/loans.rs",
+            "sha256": "sha256:42eb8d24a8f99b41ed5c717c54749273c0f3260c0b3d6787bf80f673f96fe76d",
+            "bytes": 11988
+          },
+          {
+            "path": "src/lookups.rs",
+            "sha256": "sha256:9adebcc972bbe8e8c374b8fc42074501bafed85cd0d0b5d954616cdd9f5dc0c5",
+            "bytes": 20532
+          },
+          {
+            "path": "src/mandate.rs",
+            "sha256": "sha256:55a35bf75ff9229ba2ff1f83ac4daf8c25963d74915bd0a0c6f3460f52a70ff2",
+            "bytes": 20908
+          },
+          {
+            "path": "src/order_intent.rs",
+            "sha256": "sha256:67f559de9cc732824f0ca3e3b037d349a5bff98722286d659d898b51904d118b",
+            "bytes": 4601
+          },
+          {
+            "path": "src/order_word.rs",
+            "sha256": "sha256:bd51e816d25573eb66547dc9827f1979c2bbd1559e1005fd5561b1b16ac92512",
+            "bytes": 10105
+          },
+          {
+            "path": "src/pnl.rs",
+            "sha256": "sha256:f4e7f7fc75aa6fdd260bd691e560580eb17d3a5ff6380919347b2a7f67b60c27",
+            "bytes": 30755
+          },
+          {
+            "path": "src/preamble.rs",
+            "sha256": "sha256:c13b9786d3b920349ee44d30df79733901bd14d7a258eca20d9afe562243b0cf",
+            "bytes": 2525
+          },
+          {
+            "path": "src/rates.rs",
+            "sha256": "sha256:8bab9019b932cc2534a1c547969fbc78d43b65ddb14291ed5e9a9324be97b9fd",
+            "bytes": 9401
+          },
+          {
+            "path": "src/rpc.rs",
+            "sha256": "sha256:7a176502833466f623458464f9d44c94a47e816b547c5ba0fa47735b3876e1e5",
+            "bytes": 14813
+          },
+          {
+            "path": "src/size.rs",
+            "sha256": "sha256:e0aa274354f3d27f33b6a23063ddb5ce4835d5c6b9cc854c25f0702222140cbb",
+            "bytes": 19126
+          },
+          {
+            "path": "src/skill/execution.md",
+            "sha256": "sha256:7bfd816ad1884a01bf2fbfa1495aa24a3fc89b1e1423d168e08057692f9bb5bc",
+            "bytes": 6046
+          },
+          {
+            "path": "src/skill/guard.json",
+            "sha256": "sha256:e98bdd68e63fe42a198b865f923c6593d2c351b2d62877c43d79605e0e6e7682",
+            "bytes": 1590
+          },
+          {
+            "path": "src/skill/reporting.md",
+            "sha256": "sha256:dd875df8148ba21f91533f2a3a99a0537045927d0cb3cace97545e7255e952a4",
+            "bytes": 6317
+          },
+          {
+            "path": "src/skill/safety.md",
+            "sha256": "sha256:159a389b3a043ae8d728f2cd91e2ce1a74584f601c69aa06f64ecafbe1aae72a",
+            "bytes": 791
+          },
+          {
+            "path": "src/skill/trading.md",
+            "sha256": "sha256:f61bdecd7d173e5d7888574356543bd6f6fe78eb38a05b6fd3e47cd5ccb7c644",
+            "bytes": 8610
+          },
+          {
+            "path": "src/skill/turn-contract.md",
+            "sha256": "sha256:bfddefdf1853126df1cba2e90e7e5b2b97eba99eec587006615760a2018e306d",
+            "bytes": 2844
+          },
+          {
+            "path": "src/tool.rs",
+            "sha256": "sha256:8a264f0ebc1963b8781ecc2b7ace5a94c1d6756cfcdd3a9ed5aac9adba6a5033",
+            "bytes": 51433
+          },
+          {
+            "path": "tests/chat_full_harness.md",
+            "sha256": "sha256:698c097373b4d10988c75828f5bb16cfccd6bddb4b7d49dff6c16ab3a899e54a",
+            "bytes": 21704
+          },
+          {
+            "path": "tests/skill_conformance.rs",
+            "sha256": "sha256:43886d5c734480ab3e92b26fd8b6f7b730952b674b1a43abadc4cde2c757473e",
+            "bytes": 6029
+          },
+          {
+            "path": "tests/skill_invariants.rs",
+            "sha256": "sha256:ce7d79eac0c849b4c0232cc4f58dbbc38d5ae4953b900061047b7ee1f60081a2",
+            "bytes": 1639
+          }
+        ],
+        "secret_slots": []
+      }
+    ]
+  }
+}

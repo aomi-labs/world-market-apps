@@ -95,15 +95,11 @@ pub(crate) struct TradeIntent<'a> {
 /// does not expose a simulation).
 #[derive(Debug, Clone)]
 pub(crate) struct PostTradeProjection {
+    /// Post-trade RAPV in quote units — an estimate anchored to the live
+    /// contract RAPV, never a contract read. Only returned once the ATLAS
+    /// risk-multiplier search over the projected state converges.
     pub(crate) rapv: Decimal,
-    pub(crate) rapv_display: String,
-    pub(crate) liquidation_risk: Decimal,
-    pub(crate) source: &'static str,
-    pub(crate) is_estimate: bool,
 }
-
-const POST_TRADE_SOURCE: &str = "world-markets-reporting";
-const DEV_SEED_SOURCE: &str = "world-markets-dev-seed";
 
 pub(crate) fn project_post_trade(
     client: &WorldClient,
@@ -179,47 +175,13 @@ fn project_from_account(
         .ok_or_else(|| "[world-markets] post-trade RAPV overflow".to_string())?;
     let nav = evaluate(&projected_state, assets, quote_asset, 0.0)?;
     let val_at_max = evaluate(&projected_state, assets, quote_asset, MAX_SCORE)?;
-    let risk = calculate_liquidation_risk(nav, post_rapv, val_at_max, |multiplier| {
+    // The projected state must be solvable by the same risk search the live
+    // score uses; a search that cannot converge leaves the post-trade RAPV
+    // unproven and the mandate fails closed.
+    calculate_liquidation_risk(nav, post_rapv, val_at_max, |multiplier| {
         evaluate(&projected_state, assets, quote_asset, multiplier)
     })?;
-    let risk_display = format_risk_score(risk);
-    let liquidation_risk = parse_decimal(&risk_display, "liquidation_risk")
-        .map_err(|verdict| format!("[world-markets] {}: {}", verdict.rule, verdict.detail))?;
-    Ok(PostTradeProjection {
-        rapv: post_rapv,
-        rapv_display: format_decimal(post_rapv, quote_asset.position_decimals),
-        liquidation_risk,
-        source: POST_TRADE_SOURCE,
-        is_estimate: true,
-    })
-}
-
-/// Local harness only. When `WORLD_DEV_SEED_POST_TRADE_RAPV` is set, a failed
-/// ATLAS projection falls back to live RAPV so the mandate floor can pass in
-/// `aomi-run` (stubbed evm-core). Production stays fail-closed.
-pub(crate) fn dev_seed_post_trade_rapv_enabled() -> bool {
-    matches!(
-        std::env::var("WORLD_DEV_SEED_POST_TRADE_RAPV")
-            .unwrap_or_default()
-            .to_ascii_lowercase()
-            .as_str(),
-        "1" | "true" | "yes" | "on"
-    )
-}
-
-pub(crate) fn dev_seed_rapv(account: &Account) -> Option<Decimal> {
-    if !dev_seed_post_trade_rapv_enabled() {
-        return None;
-    }
-    parse_decimal(
-        &account.risk_adjusted_portfolio_value,
-        "risk_adjusted_portfolio_value",
-    )
-    .ok()
-}
-
-pub(crate) fn dev_seed_source() -> &'static str {
-    DEV_SEED_SOURCE
+    Ok(PostTradeProjection { rapv: post_rapv })
 }
 
 fn apply_intent(
@@ -1100,8 +1062,6 @@ mod tests {
         )
         .unwrap();
         assert_eq!(projection.rapv, Decimal::from(998));
-        assert!(projection.is_estimate);
-        assert_eq!(projection.source, "world-markets-reporting");
     }
 
     #[test]
@@ -1189,15 +1149,5 @@ mod tests {
             relative <= Decimal::new(5, 3),
             "ATLAS evaluate(1) {derived} must stay within 50 bps of live RAPV {live} (delta {delta})"
         );
-    }
-
-    #[test]
-    fn dev_seed_rapv_uses_live_reading_when_enabled() {
-        let account = usdt_account(Decimal::from(9_000));
-        unsafe { std::env::remove_var("WORLD_DEV_SEED_POST_TRADE_RAPV") };
-        assert!(dev_seed_rapv(&account).is_none());
-        unsafe { std::env::set_var("WORLD_DEV_SEED_POST_TRADE_RAPV", "1") };
-        assert_eq!(dev_seed_rapv(&account), Some(Decimal::from(9_000)));
-        unsafe { std::env::remove_var("WORLD_DEV_SEED_POST_TRADE_RAPV") };
     }
 }
