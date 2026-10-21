@@ -10,7 +10,11 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - run: python3 -m unittest discover -s .github/scripts -p 'test_*.py' -v
+      - name: Type-check deployment scripts
+        run: |
+          pip install mypy==1.17.1
+          python3 -m mypy --strict .github/scripts/build_candidate.py .github/scripts/deploy_project.py
       - name: Validate workflow syntax
         run: |
           GOBIN=/tmp/aomi-workflow-tools go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.12
-          /tmp/aomi-workflow-tools/actionlint .github/workflows/deploy-project.yml .github/workflows/test-candidate.yml .github/workflows/build-candidate.yml
+          /tmp/aomi-workflow-tools/actionlint .github/workflows/deploy-project.yml .github/workflows/test-candidate.yml

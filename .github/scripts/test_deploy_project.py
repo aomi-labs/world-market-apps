@@ -1,5 +1,4 @@
 """Local regressions; no credentials, GitHub writes or database are used."""
-import hashlib
 import io
 import json
 import os
@@ -84,14 +83,18 @@ class SourcePackaging(unittest.TestCase):
 
 class RetryAndPublication(unittest.TestCase):
     def test_reuse_requires_complete_release_at_the_original_candidate(self):
-        deployment = {"platform": {"repository": "aomi-labs/test", "commit_hash": "candidate", "apps": [{"name": "demo", "release_tag": "tag"}]}}
+        deployment = deploy.Deployment(
+            id="dep_12_r0123456789_" + "a" * 12, project_id=42, source_commit="a" * 40,
+            repository_link="https://github.com/aomi-labs/source", installation_id=12, platform="partner",
+            repository="aomi-labs/test", branch="aomi-labs/source/12/" + "a" * 12, candidate_commit="candidate",
+            sdk_version=None, ffi_version=None, apps=(deploy.App("demo", "tag", "apps/12/r0123456789/demo", "aomi.toml"),))
         release = {"assets": [{"name": name} for name in ["manifest.json", "aomi-release.json", f"aomi-plugins-tag-{deploy.TARGET}.tar.gz"]]}
         with patch.dict(os.environ, {"GH_TOKEN": "test"}), patch.object(deploy, "request", side_effect=[release, {"object": {"type": "commit", "sha": "candidate"}}]):
-            self.assertEqual(deploy.release_plan(deployment), [{"name": "demo", "reuse": True}])
+            self.assertEqual(deployment.release_plan(), [{"name": "demo", "reuse": True}])
         with patch.dict(os.environ, {"GH_TOKEN": "test"}), patch.object(deploy, "request", side_effect=[release, {"object": {"type": "commit", "sha": "different"}}]):
-            with self.assertRaisesRegex(RuntimeError, "conflicting immutable release"): deploy.release_plan(deployment)
+            with self.assertRaisesRegex(RuntimeError, "conflicting immutable release"): deployment.release_plan()
         with patch.dict(os.environ, {"GH_TOKEN": "test"}), patch.object(deploy, "request", side_effect=RuntimeError("Deployment service returned HTTP 404")):
-            self.assertEqual(deploy.release_plan(deployment), [{"name": "demo", "reuse": False}])
+            self.assertEqual(deployment.release_plan(), [{"name": "demo", "reuse": False}])
 
     def test_diagnostics_redact_credentials_but_keep_compilation_location(self):
         result = deploy.diagnostic("error[E0432] at src/lib.rs:4\nAuthorization: Bearer example\nhttps://user:password@host/path")
@@ -122,9 +125,12 @@ class PlatformLifecycle(unittest.TestCase):
         self.deployment = {
             "id": self.deployment_id,
             "sdk_version": "4.0.0",
-            "source": {"project_id": 42, "commit_hash": self.source},
+            "source": {"project_id": 42, "commit_hash": self.source,
+                       "repository_link": "https://github.com/partner/apps", "installation_id": 12},
             "platform": {"repository": "partner/apps", "platform": "partner", "commit_hash": None,
-                         "apps": [{"name": "demo", "release_tag": "apps-12-r0123456789-demo-" + self.source[:12]}]},
+                         "platform_branch": "partner/apps/12/" + self.source[:12],
+                         "apps": [{"name": "demo", "release_tag": "apps-12-r0123456789-demo-" + self.source[:12],
+                                   "path": "apps/12/r0123456789/demo", "aomi_toml_path": "aomi.toml"}]},
         }
         self.run = {"id": 20, "created_at": "2026-09-08T00:00:01Z", "updated_at": "2026-09-08T00:00:01Z",
                     "display_title": "aomi-deploy|staging|42|" + self.source + "|main|", "status": "in_progress"}
@@ -151,7 +157,7 @@ class PlatformLifecycle(unittest.TestCase):
         with patch.object(deploy, "request", side_effect=[{"workflow_runs": [self.run]}, RuntimeError("Deployment service returned HTTP 404")]) as request:
             deploy.prepare()
         self.assertEqual((self.work / "source.tar.gz").read_bytes(), self.snapshot.read_bytes())
-        self.assertEqual(deploy.read_deployment()["platform"]["commit_hash"], self.candidate)
+        self.assertEqual(deploy.read_deployment().candidate_commit, self.candidate)
         self.assertEqual(json.loads((self.work / "plan.json").read_text()), [{"name": "demo", "reuse": False}])
         for call in request.call_args_list:
             self.assertEqual(call.args[0], "GET")
@@ -168,19 +174,19 @@ class PlatformLifecycle(unittest.TestCase):
 
     def test_published_legacy_candidate_can_reuse_releases_without_a_snapshot(self):
         self.snapshot.unlink()
-        with patch.object(deploy, "request", return_value={"workflow_runs": [self.run]}), patch.object(deploy, "release_plan", return_value=[{"name": "demo", "reuse": True}]):
+        with patch.object(deploy, "request", return_value={"workflow_runs": [self.run]}), patch.object(deploy.Deployment, "release_plan", return_value=[{"name": "demo", "reuse": True}]):
             deploy.prepare()
         self.assertFalse((self.work / "source.tar.gz").exists())
-        with patch.object(deploy, "request", return_value={"workflow_runs": [self.run]}), patch.object(deploy, "release_plan", return_value=[{"name": "demo", "reuse": False}]):
+        with patch.object(deploy, "request", return_value={"workflow_runs": [self.run]}), patch.object(deploy.Deployment, "release_plan", return_value=[{"name": "demo", "reuse": False}]):
             with self.assertRaisesRegex(RuntimeError, "Push a new source commit"):
                 deploy.prepare()
 
     def test_publication_rechecks_releases_and_never_overwrites_them(self):
-        with patch.object(deploy, "release_plan", return_value=[{"name": "demo", "reuse": True}]) as releases, patch.object(deploy.subprocess, "run") as command:
+        with patch.object(deploy.Deployment, "release_plan", autospec=True, return_value=[{"name": "demo", "reuse": True}]) as releases, patch.object(deploy.subprocess, "run") as command:
             deploy.publish()
-        releases.assert_called_once_with(self.deployment)
+        releases.assert_called_once_with(deploy.Deployment.parse(self.deployment))
         command.assert_not_called()
-        with patch.object(deploy, "release_plan", side_effect=RuntimeError("conflicting immutable release")), patch.object(deploy.subprocess, "run") as command:
+        with patch.object(deploy.Deployment, "release_plan", side_effect=RuntimeError("conflicting immutable release")), patch.object(deploy.subprocess, "run") as command:
             with self.assertRaisesRegex(RuntimeError, "conflicting immutable release"):
                 deploy.publish()
         command.assert_not_called()
@@ -202,9 +208,8 @@ class PlatformLifecycle(unittest.TestCase):
         self.assertTrue((self.work / "source.tar.gz").exists())
 
     def test_build_normalizes_the_source_repository_link_for_the_identity_check(self):
-        self.deployment["source"].update({"repository_link": "github.com/Partner/Apps", "installation_id": 12})
-        self.deployment["platform"].update({"platform_branch": "partner/apps/12/" + self.source[:12]})
-        self.deployment["platform"]["apps"][0].update({"aomi_toml_path": "aomi.toml", "path": "apps/12/r0123456789/demo"})
+        self.deployment["source"]["repository_link"] = "github.com/Partner/Apps"
+        self.deployment["platform"]["commit_hash"] = self.candidate
         (self.work / "deployment.json").write_text(json.dumps(self.deployment))
         with tarfile.open(self.work / "source.tar.gz", "w:gz") as archive:
             for name, content in {"source/Cargo.toml": b'[workspace]\nmembers=[]\n', "source/Cargo.lock": b'', "source/aomi.toml": b'name="demo"'}.items():
@@ -213,8 +218,11 @@ class PlatformLifecycle(unittest.TestCase):
         with patch.dict(os.environ, {"BUILD_APP": "demo"}), patch.object(deploy, "ROOT", self.work / "root"), patch.object(candidate, "build_release") as build_release:
             deploy.build()
         ctx = build_release.call_args.args[1]
-        self.assertEqual(ctx["owner_repo"], "partner/apps")
-        self.assertEqual(ctx["short_commit"], self.source[:12])
+        self.assertEqual(ctx.owner_repo, "partner/apps")
+        self.assertEqual(ctx.short_commit, self.source[:12])
+        self.assertEqual(ctx.commit, self.candidate)
+        staged = self.work / "root" / "apps/12/r0123456789/demo/.aomi/deployment.json"
+        self.assertEqual(json.loads(staged.read_text()), self.deployment)
 
     def test_verify_rejects_an_app_outside_the_deployment(self):
         with patch.dict(os.environ, {"VERIFY_APP": "other"}), patch.object(deploy, "api") as api:

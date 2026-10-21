@@ -17,8 +17,8 @@ Candidate branches use:
 <source-owner>/<source-repo>/<installation-id>/<short-source-commit>
 ```
 
-Pushes from the Aomi Build GitHub Apps trigger
-`.github/workflows/build-candidate.yml`. The workflow validates the
+The Aomi Manager dispatches
+`.github/workflows/deploy-project.yml` for each deployment. The workflow validates the
 backend-generated deployment manifest, builds the Rust `cdylib`, and publishes
 the release bundle and provenance metadata.
 
@@ -38,7 +38,7 @@ world-market-apps/
 |-- apps/
 |   `-- .gitkeep
 `-- .github/
-    |-- workflows/build-candidate.yml
+    |-- workflows/deploy-project.yml
     `-- scripts/
         |-- build_candidate.py
         `-- test_build_candidate.py
