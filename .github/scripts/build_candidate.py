@@ -478,10 +478,10 @@ def plugin_ffi(manifest: dict[str, Any] | None, sdk_version: str) -> int | None:
     version = manifest.get("ffi_version", {"5.1.1": 1, "5.1.2": 1}.get(sdk_version))
     if version is not None and (type(version) is not int or version <= 0):
         fail("Compiled manifest ffi_version must be a positive integer")
-    capabilities = manifest.get("required_capabilities", [])
-    supported = {"async_tools_v1", "routes_v1", "app_skills_v1", "secret_slots_v1", "evm_sponsored_4337_v1"}
-    if not isinstance(capabilities, list) or any(not isinstance(item, str) or item not in supported for item in capabilities):
-        fail("Compiled manifest requires an unsupported FFI capability")
+    interfaces = manifest.get("required_interfaces", [])
+    supported_interfaces = {"async_tools_v1", "routes_v1", "app_skills_v1", "secret_slots_v1", "evm_sponsored_4337_v1"}
+    if not isinstance(interfaces, list) or any(not isinstance(item, str) or item not in supported_interfaces for item in interfaces):
+        fail("Compiled manifest requires an unsupported FFI interface")
     return version
 
 
@@ -546,8 +546,8 @@ def build_release(app_dir: pathlib.Path, ctx: dict[str, str], target: str, dist_
     }
     if ffi_version is not None:
         bundle_manifest["ffi_version"] = ffi_version
-    if plugin_manifest and plugin_manifest.get("required_capabilities"):
-        bundle_manifest["required_capabilities"] = plugin_manifest["required_capabilities"]
+    if plugin_manifest and plugin_manifest.get("required_interfaces"):
+        bundle_manifest["required_interfaces"] = plugin_manifest["required_interfaces"]
     manifest_path = plugins_dir / "manifest.json"
     write_json(manifest_path, bundle_manifest)
 

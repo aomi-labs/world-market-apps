@@ -24,7 +24,7 @@ class FfiCompatibility(unittest.TestCase):
             build.plugin_ffi({"sdk_version": "other", "ffi_version": 1}, "99.0.0")
         with self.assertRaises(SystemExit):
             build.plugin_ffi({"sdk_version": "99.0.0", "ffi_version": 1,
-                              "required_capabilities": ["future_permission_v2"]}, "99.0.0")
+                              "required_interfaces": ["future_permission_v2"]}, "99.0.0")
 
     def test_publisher_accepts_cross_sdk_bundle_but_preserves_integrity_gates(self):
         with tempfile.TemporaryDirectory() as directory:
