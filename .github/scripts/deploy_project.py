@@ -271,10 +271,10 @@ def verify_bundle(directory, deployment, app, manifest):
     # never extract or execute it on this credential-bearing runner.
     expected_ffi = deployment.get("ffi_version")
     if expected_ffi is None:
-        compatible = manifest.get("sdk_version") == deployment.get("sdk_version")
+        compatible = bool(deployment.get("sdk_version")) and manifest.get("sdk_version") == deployment.get("sdk_version")
     else:
         actual = manifest.get("ffi_version", {"5.1.1": 1, "5.1.2": 1}.get(manifest.get("sdk_version")))
-        compatible = type(expected_ffi) is int and type(actual) is int and actual == expected_ffi
+        compatible = type(expected_ffi) is int and expected_ffi > 0 and type(actual) is int and actual == expected_ffi
     if not compatible or manifest.get("target") != TARGET:
         raise RuntimeError("Release FFI compatibility or target does not match the deployment")
     entry = manifest["plugins"][app["name"]]

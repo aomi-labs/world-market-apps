@@ -400,10 +400,10 @@ def is_unsupported_manifest_error(stderr: str) -> bool:
 
 
 def read_plugin_manifest(plugin_path: pathlib.Path, sdk_version: str) -> dict[str, Any] | None:
-    """Declared secret slots for a built plugin, via `aomi-build manifest`.
+    """Read compiled FFI requirements and secret slots via `aomi-build manifest`.
 
     Installs the app's exact pinned aomi-sdk so the manifest reader matches the
-    ABI the plugin was built against. Returns [] ONLY when the installed SDK
+    ABI the plugin was built against. Returns None ONLY when the installed SDK
     genuinely predates the `manifest` subcommand -- that is the sole
     legitimate reason a build may ship without secret metadata. Any other
     failure (a flaky `cargo install`, a transient `aomi-build manifest`
