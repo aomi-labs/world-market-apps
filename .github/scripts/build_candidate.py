@@ -399,7 +399,7 @@ def is_unsupported_manifest_error(stderr: str) -> bool:
     return False
 
 
-def read_plugin_secrets(plugin_path: pathlib.Path, sdk_version: str) -> list[dict[str, Any]]:
+def read_plugin_manifest(plugin_path: pathlib.Path, sdk_version: str) -> dict[str, Any] | None:
     """Declared secret slots for a built plugin, via `aomi-build manifest`.
 
     Installs the app's exact pinned aomi-sdk so the manifest reader matches the
@@ -432,7 +432,7 @@ def read_plugin_secrets(plugin_path: pathlib.Path, sdk_version: str) -> list[dic
                 "`manifest` subcommand (predates secret-declaration support); "
                 "this app cannot be secret-gated"
             )
-            return []
+            return None
         fail(
             f"aomi-build manifest failed for {plugin_path.name} (sdk {sdk_version}): "
             f"{stderr or 'no stderr captured'}"
@@ -455,13 +455,34 @@ def read_plugin_secrets(plugin_path: pathlib.Path, sdk_version: str) -> list[dic
 
     secrets = manifest.get("secrets")
     if secrets is None:
-        return []
+        return manifest
     if not isinstance(secrets, list):
         fail(
             f"aomi-build manifest for {plugin_path.name} (sdk {sdk_version}): \"secrets\" "
             f"field is {type(secrets).__name__}, expected a list"
         )
-    return secrets
+    return manifest
+
+
+def read_plugin_secrets(plugin_path: pathlib.Path, sdk_version: str) -> list[dict[str, Any]]:
+    manifest = read_plugin_manifest(plugin_path, sdk_version)
+    return [] if manifest is None else manifest.get("secrets") or []
+
+
+def plugin_ffi(manifest: dict[str, Any] | None, sdk_version: str) -> int | None:
+    """Use the compiled manifest; semver ranges do not establish compatibility."""
+    if manifest is None:
+        return None
+    if manifest.get("sdk_version") != sdk_version:
+        fail("Compiled manifest SDK does not match the resolved dependency")
+    version = manifest.get("ffi_version", {"5.1.1": 1, "5.1.2": 1}.get(sdk_version))
+    if version is not None and (type(version) is not int or version <= 0):
+        fail("Compiled manifest ffi_version must be a positive integer")
+    capabilities = manifest.get("required_capabilities", [])
+    supported = {"async_tools_v1", "routes_v1", "app_skills_v1", "secret_slots_v1", "evm_sponsored_4337_v1"}
+    if not isinstance(capabilities, list) or any(not isinstance(item, str) or item not in supported for item in capabilities):
+        fail("Compiled manifest requires an unsupported FFI capability")
+    return version
 
 
 def build_release(app_dir: pathlib.Path, ctx: dict[str, str], target: str, dist_root: pathlib.Path, source_dir: pathlib.Path | None = None) -> dict[str, str]:
@@ -471,7 +492,7 @@ def build_release(app_dir: pathlib.Path, ctx: dict[str, str], target: str, dist_
     package_name, lib_name = parse_cargo_manifest(source_dir)
     sdk_version = resolve_sdk_version(source_dir)
     expected_sdk = ctx.get("sdk_version")
-    if expected_sdk and sdk_version != expected_sdk:
+    if ctx.get("ffi_version") is None and expected_sdk and sdk_version != expected_sdk:
         fail(f"{app_name}: aomi-sdk {sdk_version} does not match required {expected_sdk}")
 
     target_dir = REPO_ROOT / ".aomi-ci-target"
@@ -508,7 +529,12 @@ def build_release(app_dir: pathlib.Path, ctx: dict[str, str], target: str, dist_
     shutil.copy2(built_lib, final_plugin)
     digest = sha256_file(final_plugin)
     entry: dict[str, Any] = {"file": final_plugin.name, "sha256": digest}
-    secrets = read_plugin_secrets(final_plugin, sdk_version)
+    plugin_manifest = read_plugin_manifest(final_plugin, sdk_version)
+    ffi_version = plugin_ffi(plugin_manifest, sdk_version)
+    expected_ffi = ctx.get("ffi_version")
+    if expected_ffi is not None and (type(expected_ffi) is not int or ffi_version != expected_ffi):
+        fail(f"{app_name}: compiled ffi_version {ffi_version} does not match required {expected_ffi}")
+    secrets = [] if plugin_manifest is None else plugin_manifest.get("secrets") or []
     if secrets:
         entry["secrets"] = secrets
     bundle_manifest = {
@@ -518,6 +544,10 @@ def build_release(app_dir: pathlib.Path, ctx: dict[str, str], target: str, dist_
         "commit": info["source_commit"],
         "plugins": {app_name: entry},
     }
+    if ffi_version is not None:
+        bundle_manifest["ffi_version"] = ffi_version
+    if plugin_manifest and plugin_manifest.get("required_capabilities"):
+        bundle_manifest["required_capabilities"] = plugin_manifest["required_capabilities"]
     manifest_path = plugins_dir / "manifest.json"
     write_json(manifest_path, bundle_manifest)
 
