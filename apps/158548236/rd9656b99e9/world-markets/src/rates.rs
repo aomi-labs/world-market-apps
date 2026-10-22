@@ -57,12 +57,6 @@ pub(crate) fn annualize_funding_8h(rate_8h: Decimal) -> Decimal {
     rate_8h * Decimal::from(FUNDING_PERIODS_PER_YEAR)
 }
 
-/// 8h funding as a percent (0.0001 → `"0.01"`), matching watch `rate_pct`.
-pub(crate) fn eight_hour_rate_as_pct(rate_8h: &str) -> Option<String> {
-    let rate = parse_rate(rate_8h).ok()?;
-    Some((rate * Decimal::from(100)).normalize().to_string())
-}
-
 pub(crate) fn classic_basis_spread(funding_annualized: Decimal, borrow_apr: Decimal) -> Decimal {
     funding_annualized - borrow_apr
 }
@@ -73,10 +67,6 @@ pub(crate) fn yield_basis_spread(
     borrow_apr: Decimal,
 ) -> Decimal {
     funding_annualized + native_yield_apy - borrow_apr
-}
-
-pub(crate) fn daily_carry_from_annual(spread_apr: Decimal) -> Decimal {
-    spread_apr / Decimal::from(365)
 }
 
 pub(crate) fn load_native_yields() -> BTreeMap<String, String> {
@@ -235,11 +225,6 @@ mod tests {
             annualize_funding_8h(eight_h).normalize().to_string(),
             "0.1095"
         );
-    }
-
-    #[test]
-    fn eight_hour_rate_as_pct_matches_watch_rate_pct() {
-        assert_eq!(eight_hour_rate_as_pct("0.0001").as_deref(), Some("0.01"));
     }
 
     #[test]
