@@ -1,0 +1,9 @@
+[app]
+name         = "playground-example"      # slug — kebab-case; MUST match dyn_aomi_app! name; becomes the release tag
+display_name = "Playground Example"      # human-readable
+public       = true                      # visible in the community catalog; set false to keep it private to you
+
+# Optional: pin which class of backend can load this release.
+# Omit to default to ["staging"] — your release only loads on staging backends.
+# Set ["prod"] for the production tier once you've tested it.
+# server_tags = ["staging"]
