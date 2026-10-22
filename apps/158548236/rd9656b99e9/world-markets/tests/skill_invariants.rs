@@ -9,6 +9,11 @@ fn skill_root() -> PathBuf {
 }
 
 fn skill(path: &str) -> String {
+    if path == "workflows.md" {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/skill");
+        return fs::read_to_string(root.join("workflows.md")).unwrap()
+            + &fs::read_to_string(root.join("workflows-monitoring.md")).unwrap();
+    }
     fs::read_to_string(skill_root().join(path)).unwrap_or_else(|e| panic!("read {path}: {e}"))
 }
 

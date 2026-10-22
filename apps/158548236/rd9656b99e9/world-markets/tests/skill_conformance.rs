@@ -9,6 +9,11 @@ use std::fs;
 use std::path::PathBuf;
 
 fn skill(path: &str) -> String {
+    if path == "workflows.md" {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/skill");
+        return fs::read_to_string(root.join("workflows.md")).unwrap()
+            + &fs::read_to_string(root.join("workflows-monitoring.md")).unwrap();
+    }
     let mut p = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     p.push("src/skill");
     p.push(path);

@@ -112,4 +112,7 @@ fi
 # Seed post-trade RAPV from live RAPV when ATLAS projection fails (stubbed evm-core).
 export WORLD_DEV_SEED_POST_TRADE_RAPV="${WORLD_DEV_SEED_POST_TRADE_RAPV:-1}"
 
-aomi-run "$PLUGIN" --env-file .env --provider openrouter "${ARGS[@]}"
+if [[ ${#ARGS[@]} -gt 0 ]]; then
+  exec aomi-run "$PLUGIN" --env-file .env --provider openrouter "${ARGS[@]}"
+fi
+exec aomi-run "$PLUGIN" --env-file .env --provider openrouter

@@ -14,7 +14,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 alloy-primitives = "=0.8.25"
 alloy-sol-types = "=0.8.25"
-aomi-sdk = "=4.0.0"
+aomi-sdk = "=5.0.0"
 plotters = { version = "0.3.7", default-features = false, features = ["bitmap_backend", "bitmap_encoder", "ab_glyph", "all_elements"] }
 image = { version = "0.24", default-features = false, features = ["png"] }
 png = "0.17"
