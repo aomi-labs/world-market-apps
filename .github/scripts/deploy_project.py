@@ -216,7 +216,7 @@ def build():
     extract_source(WORK / "source.tar.gz", source)
     ctx = {"owner_repo": candidate.normalize_repo(deployment["source"]["repository_link"]), "installation_id": str(deployment["source"]["installation_id"]),
            "short_commit": deployment["source"]["commit_hash"][:12], "branch": deployment["platform"]["platform_branch"],
-           "platform": deployment["platform"]["platform"], "sdk_version": deployment["sdk_version"]}
+           "platform": deployment["platform"]["platform"], "sdk_version": deployment.get("sdk_version"), "ffi_version": deployment.get("ffi_version")}
     # The deployment's branch is the canonical authority for short SHA length.
     ctx["short_commit"] = ctx["branch"].rsplit("/", 1)[1]
     candidate.current_commit = lambda: deployment["platform"]["commit_hash"]
@@ -269,8 +269,14 @@ def publish():
 def verify_bundle(directory, deployment, app, manifest):
     # Customer compilation can change any build output. Parse data only here;
     # never extract or execute it on this credential-bearing runner.
-    if manifest.get("sdk_version") != deployment["sdk_version"] or manifest.get("target") != TARGET:
-        raise RuntimeError("Release SDK or target does not match the deployment")
+    expected_ffi = deployment.get("ffi_version")
+    if expected_ffi is None:
+        compatible = bool(deployment.get("sdk_version")) and manifest.get("sdk_version") == deployment.get("sdk_version")
+    else:
+        actual = manifest.get("ffi_version", {"5.1.1": 1, "5.1.2": 1}.get(manifest.get("sdk_version")))
+        compatible = type(expected_ffi) is int and expected_ffi > 0 and type(actual) is int and actual == expected_ffi
+    if not compatible or manifest.get("target") != TARGET:
+        raise RuntimeError("Release FFI compatibility or target does not match the deployment")
     entry = manifest["plugins"][app["name"]]
     # The established release format permits the generated plugin basename.
     name = entry.get("file", "")
